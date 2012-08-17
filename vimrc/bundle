@@ -6,4 +6,8 @@ Bundle 'Align'
 Bundle 'tpope/vim-rails'
 Bundle 'JavaScript-syntax'
 Bundle 'kchmck/vim-coffee-script'
+Bundle 'Shougo/neocomplcache'
+Bundle 'Shougo/unite.vim'
+Bundle 'thinca/vim-ref'
+Bundle 'thinca/vim-quickrun'
 filetype plugin indent on
