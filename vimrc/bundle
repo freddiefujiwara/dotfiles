@@ -1,0 +1,9 @@
+set rtp+=~/.vim/vundle.git/
+call vundle#rc()
+filetype off
+
+Bundle 'Align'
+Bundle 'tpope/vim-rails'
+Bundle 'JavaScript-syntax'
+Bundle 'kchmck/vim-coffee-script'
+filetype plugin indent on

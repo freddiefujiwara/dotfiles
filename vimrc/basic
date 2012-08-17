@@ -1,0 +1,20 @@
+set nocompatible
+set scrolloff=5
+set textwidth=0
+set nobackup
+set autoread
+set noswapfile
+set hidden
+set backspace=indent,eol,start
+set formatoptions=lmo
+set vb t_vb=
+set showcmd
+set showmode
+set modelines=0
+"use OS clipboard
+set clipboard+=unnamed
+"use mouse
+set mouse=a
+set guioptions+=a
+set ttymouse=xterm2
+
