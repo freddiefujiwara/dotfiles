@@ -18,4 +18,5 @@ set mouse=a
 set guioptions+=a
 set ttymouse=xterm2
 set list
+set nu
 syntax on
