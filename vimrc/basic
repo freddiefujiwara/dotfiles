@@ -1,3 +1,5 @@
+set shiftwidth=4
+set expandtab
 set nocompatible
 set scrolloff=5
 set textwidth=0
