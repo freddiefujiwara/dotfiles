@@ -1,13 +1,17 @@
-set rtp+=~/.vim/vundle.git/
-call vundle#rc()
+set rtp+=~/.dotfiles/neobundle.vim
+
+if has('vim_starting')
+  set runtimepath+=~/dotfiles/neobundle.vim
+  call neobundle#rc(expand('~/.vim/'))
+endif
 filetype off
 
-Bundle 'Align'
-Bundle 'tpope/vim-rails'
-Bundle 'JavaScript-syntax'
-Bundle 'kchmck/vim-coffee-script'
-Bundle 'Shougo/neocomplcache'
-Bundle 'Shougo/unite.vim'
-Bundle 'thinca/vim-ref'
-Bundle 'thinca/vim-quickrun'
+NeoBundle 'Align'
+NeoBundle 'tpope/vim-rails'
+NeoBundle 'JavaScript-syntax'
+NeoBundle 'kchmck/vim-coffee-script'
+NeoBundle 'Shougo/neocomplcache'
+NeoBundle 'Shougo/unite.vim'
+NeoBundle 'thinca/vim-ref'
+NeoBundle 'thinca/vim-quickrun'
 filetype plugin indent on

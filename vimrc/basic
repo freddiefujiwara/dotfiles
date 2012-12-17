@@ -17,5 +17,11 @@ set modelines=0
 set clipboard+=unnamed
 set ttymouse=xterm2
 set list
-set nu
+set number
+set ruler
 syntax on
+"for search
+set ignorecase
+set smartcase
+set incsearch
+set history=1000
