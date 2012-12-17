@@ -30,4 +30,7 @@ NeoBundle 'https://github.com/mattn/webapi-vim.git'
 NeoBundle 'https://github.com/yuratomo/gmail.vim.git'
 NeoBundle 'https://github.com/mattn/zencoding-vim.git'
 NeoBundle 'https://github.com/scrooloose/nerdtree.git'
+NeoBundle 'kana/vim-metarw'
+NeoBundle 'emonkak/vim-metarw-gist'
+NeoBundle 'mattn/vim-metarw-gdrive'
 filetype plugin indent on
