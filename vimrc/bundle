@@ -8,7 +8,7 @@ filetype off
 
 NeoBundle 'Align'
 NeoBundle 'tpope/vim-rails'
-NeoBundle 'JavaScript-syntax'
+NeoBundle 'pangloss/vim-javascript'
 NeoBundle 'kchmck/vim-coffee-script'
 NeoBundle 'Shougo/neocomplcache'
 NeoBundle 'Shougo/unite.vim'
@@ -28,4 +28,5 @@ NeoBundle 'Shougo/vimfiler'
 NeoBundle 'https://github.com/mrtazz/simplenote.vim.git'
 NeoBundle 'https://github.com/yuratomo/gmail.vim.git'
 NeoBundle 'https://github.com/mattn/zencoding-vim.git'
+NeoBundle 'https://github.com/scrooloose/nerdtree.git'
 filetype plugin indent on
