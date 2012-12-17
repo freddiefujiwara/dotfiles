@@ -27,4 +27,5 @@ NeoBundle 'Shougo/vimshell'
 NeoBundle 'Shougo/vimfiler'
 NeoBundle 'https://github.com/mrtazz/simplenote.vim.git'
 NeoBundle 'https://github.com/yuratomo/gmail.vim.git'
+NeoBundle 'https://github.com/mattn/zencoding-vim.git'
 filetype plugin indent on
