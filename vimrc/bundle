@@ -35,4 +35,5 @@ NeoBundle 'mattn/vim-metarw-gdrive'
 NeoBundle 'mattn/vimplenote-vim'
 NeoBundle 'tpope/vim-fugitive'
 NeoBundle 'gregsexton/gitv'
+NeoBundle 'mattn/pureirc-vim'
 filetype plugin indent on
