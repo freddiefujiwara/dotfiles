@@ -36,4 +36,8 @@ NeoBundle 'https://github.com/mattn/vimplenote-vim.git'
 NeoBundle 'https://github.com/tpope/vim-fugitive.git'
 NeoBundle 'https://github.com/gregsexton/gitv.git'
 NeoBundle 'https://github.com/mattn/pureirc-vim.git'
+NeoBundle "git://github.com/osyo-manga/neocomplcache-snippets-complete-dart.git"
+NeoBundle "git://github.com/vim-scripts/Dart.git"
+
+
 filetype plugin indent on
