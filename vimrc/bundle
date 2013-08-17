@@ -33,5 +33,6 @@ NeoBundle 'https://github.com/xolox/vim-misc.git'
 NeoBundle 'https://github.com/xolox/vim-misc.git'
 NeoBundle 'https://github.com/kien/ctrlp.vim.git'
 NeoBundle 'https://github.com/scrooloose/syntastic.git'
+NeoBundle 'https://github.com/vim-scripts/sudo.vim.git'
 
 filetype plugin indent on
