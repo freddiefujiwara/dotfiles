@@ -36,12 +36,13 @@ NeoBundle 'https://github.com/vim-scripts/sudo.vim.git'
 
 NeoBundle 'https://github.com/Shougo/neosnippet.git'
 NeoBundle 'https://github.com/derekwyatt/vim-scala.git'
-NeoBundle 'https://github.com/majutsushi/tagbar'
+NeoBundle 'https://github.com/majutsushi/tagbar.git'
 NeoBundle 'https://github.com/nathanaelkane/vim-indent-guides'
-NeoBundle 'https://github.com/scrooloose/nerdtree'
-NeoBundle 'https://github.com/szw/vim-tags'
+NeoBundle 'https://github.com/scrooloose/nerdtree.git'
+NeoBundle 'https://github.com/szw/vim-tags.git'
 NeoBundle 'https://github.com/tomasr/molokai.git'
 NeoBundle 'https://github.com/vim-scripts/errormarker.vim.git'
-NeoBundle 'https://github.com/wincent/Command-T'
+NeoBundle 'https://github.com/wincent/Command-T.git'
+NeoBundle 'https://github.com/Blackrush/vim-gocode.git', {"autoload": {"filetypes": ['go']}}
 
 filetype plugin indent on
