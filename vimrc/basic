@@ -1,3 +1,6 @@
+set shiftwidth=4
+set tabstop=4
+set expandtab
 set nocompatible
 set scrolloff=5
 set textwidth=0
@@ -13,9 +16,14 @@ set showmode
 set modelines=0
 "use OS clipboard
 set clipboard+=unnamed
-"use mouse
-set mouse=a
-set guioptions+=a
 set ttymouse=xterm2
 set list
 set encoding=utf-8
+set number
+set ruler
+syntax on
+"for search
+set ignorecase
+set smartcase
+set incsearch
+set history=1000
