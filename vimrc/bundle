@@ -43,5 +43,6 @@ NeoBundle 'https://github.com/szw/vim-tags'
 NeoBundle 'https://github.com/tomasr/molokai.git'
 NeoBundle 'https://github.com/vim-scripts/errormarker.vim.git'
 NeoBundle 'https://github.com/wincent/Command-T'
+NeoBundle 'Blackrush/vim-gocode', {"autoload": {"filetypes": ['go']}}
 
 filetype plugin indent on

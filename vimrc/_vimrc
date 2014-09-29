@@ -3,3 +3,4 @@ source ~/.dotfiles/vimrc/bundle
 source ~/.dotfiles/vimrc/neocomplcache
 source ~/.dotfiles/vimrc/vimfiler
 source ~/.dotfiles/vimrc/scala
+source ~/.dotfiles/vimrc/gocode
