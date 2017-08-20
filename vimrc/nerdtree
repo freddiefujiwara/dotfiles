@@ -10,7 +10,7 @@ autocmd VimEnter * call OpenNerdTree()
 
 
 " nerdtree window resize
-let g:NERDTreeWinSize = 35
+let g:NERDTreeWinSize = 20
 
 " show hidden files
 let g:NERDTreeShowHidden=1

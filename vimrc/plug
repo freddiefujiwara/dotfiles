@@ -29,5 +29,7 @@ Plug 'moll/vim-node',
 Plug 'syngan/vim-vimlint',
 Plug 'ynkdir/vim-vimlparser',
 Plug 'mattn/emmet-vim',
-
+Plug 'https://github.com/Shougo/neocomplcache.git'
+Plug 'https://github.com/Shougo/neosnippet.git'
+Plug 'violetyk/neocomplete-php.vim'
 call plug#end()

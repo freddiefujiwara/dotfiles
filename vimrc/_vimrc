@@ -12,3 +12,5 @@ source ~/.dotfiles/vimrc/nerdtree
 source ~/.dotfiles/vimrc/syntastic
 source ~/.dotfiles/vimrc/yankstack
 source ~/.dotfiles/vimrc/basic
+source ~/.dotfiles/vimrc/neocomplcache
+source ~/.dotfiles/vimrc/neocomplete
