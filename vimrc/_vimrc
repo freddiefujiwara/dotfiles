@@ -1,6 +1,7 @@
 source ~/.dotfiles/vimrc/basic
-source ~/.dotfiles/vimrc/bundle
+source ~/.dotfiles/vimrc/plug
 source ~/.dotfiles/vimrc/neocomplcache
+source ~/.dotfiles/vimrc/neocomplete
 source ~/.dotfiles/vimrc/vimfiler
 source ~/.dotfiles/vimrc/scala
 source ~/.dotfiles/vimrc/gocode

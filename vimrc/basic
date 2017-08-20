@@ -27,3 +27,4 @@ set ignorecase
 set smartcase
 set incsearch
 set history=1000
+filetype plugin indent on
