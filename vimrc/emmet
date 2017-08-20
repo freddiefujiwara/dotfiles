@@ -1,0 +1,1 @@
+au FileType html,css,scss imap <expr>kj  emmet#expandAbbrIntelligent("\<tab>")

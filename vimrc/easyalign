@@ -1,0 +1,7 @@
+" select paragraph and start easyalign on the left
+nnoremap <leader>a vip<Plug>(EasyAlign)<cr>
+
+" Start interactive align to the right
+vmap <leader>a <Plug>(EasyAlign)<cr><right>
+
+let g:easy_align_ignore_groups = ['Comment']
