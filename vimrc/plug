@@ -1,5 +1,6 @@
 " Start plugins definition
 call plug#begin($HOME.'/.vim/plugins/plugged')
+let g:vimDir = $HOME.'/.vim'
 
 Plug 'scrooloose/nerdtree',                       | Plug 'https://gist.github.com/1f40e70e615f2fa2212bf5423662277d.git', { 'dir' : g:vimDir . '/nerdtree_plugin' }
 
