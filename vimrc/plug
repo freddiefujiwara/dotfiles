@@ -31,4 +31,5 @@ Plug 'https://github.com/wincent/Command-T.git'
 Plug 'https://github.com/Blackrush/vim-gocode.git'
 Plug 'elixir-lang/vim-elixir'
 Plug 'violetyk/neocomplete-php.vim'
+Plug 'editorconfig/editorconfig-vim'
 call plug#end()
