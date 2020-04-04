@@ -3,3 +3,5 @@ source ~/.dotfiles/vimrc/plug
 source ~/.dotfiles/vimrc/vimfiler
 source ~/.dotfiles/vimrc/scala
 source ~/.dotfiles/vimrc/gocode
+source ~/.dotfiles/vimrc/YouCompleteMe
+source ~/.dotfiles/vimrc/airline

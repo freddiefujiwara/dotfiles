@@ -14,9 +14,7 @@ Plug 'https://github.com/gregsexton/gitv.git'
 Plug 'https://github.com/ujihisa/neco-look.git'
 Plug 'https://github.com/xolox/vim-misc.git'
 Plug 'https://github.com/kien/ctrlp.vim.git'
-Plug 'https://github.com/scrooloose/syntastic.git'
 Plug 'https://github.com/vim-scripts/sudo.vim.git'
-Plug 'https://github.com/Shougo/neosnippet.git'
 Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'https://github.com/nathanaelkane/vim-indent-guides'
 Plug 'https://github.com/scrooloose/nerdtree.git'
@@ -25,5 +23,20 @@ Plug 'https://github.com/tomasr/molokai.git'
 Plug 'https://github.com/vim-scripts/errormarker.vim.git'
 Plug 'https://github.com/wincent/Command-T.git'
 Plug 'editorconfig/editorconfig-vim'
-Plug 'zxqfl/tabnine-vim'
+"" auto complete
+Plug 'sheerun/vim-polyglot'
+Plug 'Valloric/YouCompleteMe'
+Plug 'ervandew/supertab'
+"" snippet
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
+"" auto bracket
+Plug 'Raimondi/delimitMate'
+Plug 'tpope/vim-surround'
+"" auto format
+Plug 'Chiel92/vim-autoformat'
+"" error detect
+Plug 'scrooloose/syntastic'
+"" delete white space
+Plug 'bronson/vim-trailing-whitespace'
 call plug#end()
