@@ -16,7 +16,7 @@ set showmode
 set modelines=0
 "use OS clipboard
 set clipboard+=unnamed
-set ttymouse=xterm2
+" set ttymouse=xterm2
 set list
 set encoding=utf-8
 set number
