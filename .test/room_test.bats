@@ -4,6 +4,7 @@ setup() {
   # Create a temp folder
   TEST_DIR=$(mktemp -d)
   export WORK_DIR="$TEST_DIR"
+  export USER_ID="1000000000182401"
   ROOT="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   # --- Create a Fake 'curl' command ---
   # We make a real file named 'curl' so it works even when
@@ -45,6 +46,18 @@ teardown() {
   [ "$status" -eq 1 ]
 }
 
+@test "Function: Error (Missing USER_ID)" {
+  export USER_ID=""
+  run run_process
+  [ "$status" -eq 1 ]
+}
+
+@test "Function: Error (Missing WORK_DIR)" {
+  export WORK_DIR=""
+  run run_process
+  [ "$status" -eq 1 ]
+}
+
 @test "Function: Download fails (Empty curl)" {
   # Overwrite curl to do nothing
   echo '#!/bin/bash' > "$TEST_DIR/bin/curl"
@@ -57,7 +70,7 @@ teardown() {
 @test "Script: Run directly (Fill the last 5% coverage)" {
   # This runs the script as a separate process
   # Because we changed PATH, it still uses our fake curl
-  run bash "$ROOT/.bin/room.sh"
+  run bash "$ROOT/.bin/room.sh" "$USER_ID" "$WORK_DIR"
   
   [ "$status" -eq 0 ]
   [[ "${output}" =~ "Genre: Test Genre" ]]
