@@ -7,14 +7,23 @@ set -euo pipefail
 # URL for the API (Use default if not set)
 BASE_URL=${BASE_URL:-"https://room.rakuten.co.jp/api"}
 
-# Target User ID
-USER_ID=${USER_ID:-"1000000000182401"}
+# Target User ID (override with first CLI arg)
+USER_ID=${USER_ID:-""}
 
-# The folder where files will be saved
-WORK_DIR=${WORK_DIR:-"/usr/share/nginx/a.ze.gs/"}
+# The folder where files will be saved (override with second CLI arg)
+WORK_DIR=${WORK_DIR:-""}
 
 # --- Main Logic ---
 run_process() {
+  if [ -z "$USER_ID" ]; then
+    echo "Error: USER_ID is required." >&2
+    return 1
+  fi
+
+  if [ -z "$WORK_DIR" ]; then
+    echo "Error: WORK_DIR is required." >&2
+    return 1
+  fi
   # Check if the folder exists
   if [ ! -d "$WORK_DIR" ]; then
     echo "Error: Folder $WORK_DIR does not exist." >&2
@@ -64,5 +73,11 @@ run_process() {
 # Run the function only if this script is executed directly
 # (This allows the script to be tested without running immediately)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  if [[ $# -ge 1 ]]; then
+    USER_ID=$1
+  fi
+  if [[ $# -ge 2 ]]; then
+    WORK_DIR=$2
+  fi
   run_process
 fi
