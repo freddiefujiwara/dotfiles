@@ -1,0 +1,31 @@
+#!/bin/bash
+while getopts d: option
+do
+  case "${option}"
+    in
+    d) deviceid=${OPTARG};;
+  esac
+done
+# arg check
+if test -z $deviceid;
+then
+  echo "Usage $0 -d <deviceid>"
+  exit 1;
+fi
+token=`cat $HOME/.switchbot.tk`
+secret=`cat $HOME/.switchbot.sc`
+nonce=`uuidgen`
+
+t=$(($(date +%s)*1000))
+sign=$(printf "%s" "${token}${t}${nonce}" | openssl dgst -sha256 -hmac "$secret" -binary | base64)
+
+url_list="https://api.switch-bot.com/v1.1/devices/${deviceid}/status"
+#url_list="https://api.switchbot.net/v1.1/devices/${deviceid}/status"
+
+wget -O -\
+  --header="Content-Type: application/json"\
+  --header="Authorization: ${token}"\
+  --header="sign: ${sign}"\
+  --header="nonce: ${nonce}"\
+  --header="t: ${t}"\
+  "${url_list}" | jq

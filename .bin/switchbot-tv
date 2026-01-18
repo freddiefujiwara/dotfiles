@@ -1,0 +1,35 @@
+#!/bin/bash
+while getopts d:c: option
+do
+  case "${option}"
+    in
+    d) deviceid=${OPTARG};;
+    c) channel=${OPTARG};;
+  esac
+done
+# arg check
+if test -z $deviceid || test -z $channel;
+then
+  echo "Usage $0 -d <deviceid> -c <channel>"
+  exit 1;
+fi
+command='{"command": "SetChannel","parameter": "'$channel'","commandType": "command"}'
+
+token=`cat $HOME/.switchbot.tk`
+secret=`cat $HOME/.switchbot.sc`
+nonce=`uuidgen`
+
+t=$(($(date +%s)*1000))
+sign=$(printf "%s" "${token}${t}${nonce}" | openssl dgst -sha256 -hmac "$secret" -binary | base64)
+
+url_commands="https://api.switch-bot.com/v1.1/devices/${deviceid}/commands"
+#url_commands="https://api.switchbot.net/v1.1/devices/${deviceid}/commands"
+
+wget -O -\
+  --header="Content-Type: application/json"\
+  --header="Authorization: ${token}"\
+  --header="sign: ${sign}"\
+  --header="nonce: ${nonce}"\
+  --header="t: ${t}"\
+  --post-data="${command}"\
+  "${url_commands}" | jq
