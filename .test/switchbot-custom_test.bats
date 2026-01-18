@@ -74,5 +74,5 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" == *'"status":"ok"'* ]]
   grep -q "https://api.switch-bot.com/v1.1/devices/device123/commands" "$WGET_ARGS_FILE"
-  grep -q '--post-data={"command":"macro","parameter":"default","commandType":"customize"}' "$WGET_ARGS_FILE"
+  grep -q -- '--post-data={"command":"macro","parameter":"default","commandType":"customize"}' "$WGET_ARGS_FILE"
 }
