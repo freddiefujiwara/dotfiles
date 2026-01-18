@@ -1,1 +1,5 @@
 .vim/
+.newsboat/cache.db
+.newsboat/history
+.newsboat/history.search
+.newsboat/cache.db.lock
