@@ -1,0 +1,6 @@
+browser "w3m %u"
+external-url-viewer "w3m %u"
+include ~/.newsboat/keys
+feed-sort-order lastupdated-desc
+article-sort-order date-desc
+article-sort-order unread-first
