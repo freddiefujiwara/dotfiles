@@ -52,6 +52,8 @@ else
 endif
 highlight CursorLine cterm=NONE ctermbg=236 guibg=#3c3836
 highlight CursorLineNr cterm=bold ctermfg=214 ctermbg=236 guifg=#fabd2f guibg=#3c3836
+highlight Pmenu ctermfg=223 ctermbg=237 guifg=#ebdbb2 guibg=#3c3836
+highlight PmenuSel cterm=bold ctermfg=214 ctermbg=239 guifg=#fabd2f guibg=#504945
 "for search
 set ignorecase
 set smartcase
