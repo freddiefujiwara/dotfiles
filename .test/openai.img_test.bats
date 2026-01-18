@@ -3,6 +3,7 @@ setup() {
   TMPROOT="$(mktemp -d)"
   TESTBIN="$TMPROOT/bin"
   mkdir -p "$TESTBIN"
+  ROOT="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   # HOME差し替え（~/.openai を用意）
   export REAL_HOME=$HOME
   export HOME="$TMPROOT/home"
@@ -58,7 +59,7 @@ EOF
   # テスト対象スクリプト（SUT）を決定
   # 1) 環境変数 SUT があればそれ
   # 2) なければカレントの ./openid.img.sh を試す
-  export SUT="${SUT:-$REAL_HOME/.bin/openai.img.sh}"
+  export SUT="${SUT:-$ROOT/.bin/openai.img.sh}"
   # 存在・実行可能チェック（ここで落として原因を明確化）
   if [[ ! -e "$SUT" ]]; then
     echo "SUT not found: $SUT" >&2

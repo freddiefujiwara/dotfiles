@@ -9,4 +9,7 @@ setup:
 	rm -f  ~/.screenrc
 	ln -s ~/.dotfiles/_screenrc ~/.screenrc
 
-.PHONY: setup
+test:
+	bats .test/
+
+.PHONY: setup test

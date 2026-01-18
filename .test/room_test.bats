@@ -4,6 +4,7 @@ setup() {
   # Create a temp folder
   TEST_DIR=$(mktemp -d)
   export WORK_DIR="$TEST_DIR"
+  ROOT="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   # --- Create a Fake 'curl' command ---
   # We make a real file named 'curl' so it works even when
   # we run the script directly (bash room.sh)
@@ -25,7 +26,7 @@ EOF
   # This makes the system use our fake curl instead of the real one
   export PATH="$TEST_DIR/bin:$PATH"
   # Load the script to test functions
-  source $HOME/.bin/room.sh
+  source "$ROOT/.bin/room.sh"
 }
 
 teardown() {
@@ -56,7 +57,7 @@ teardown() {
 @test "Script: Run directly (Fill the last 5% coverage)" {
   # This runs the script as a separate process
   # Because we changed PATH, it still uses our fake curl
-  run bash $HOME/.bin/room.sh
+  run bash "$ROOT/.bin/room.sh"
   
   [ "$status" -eq 0 ]
   [[ "${output}" =~ "Genre: Test Genre" ]]
