@@ -17,10 +17,11 @@ mkdir -p "$dotfiles_dir/.vim"
 ln -s "$dotfiles_dir/.vim" "$HOME/"
 
 curl_bin="$(command -v curl)"
-curl_args=(-fL --create-dirs -o)
+curl_args=(-fL --create-dirs)
 if [[ "$curl_bin" == /mingw64/bin/curl ]]; then
   curl_args+=(--ssl-no-revoke)
 fi
+curl_args+=(-o)
 
 "$curl_bin" "${curl_args[@]}" "$HOME/.vim/autoload/plug.vim" \
   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
