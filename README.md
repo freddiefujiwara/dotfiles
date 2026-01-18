@@ -5,7 +5,8 @@ It is very small and simple.
 
 ## What is inside
 
-- `Makefile`: install and link the dotfiles.
+- `setup.sh`: install and link the dotfiles.
+- `test.sh`: run tests with `bats`.
 - `vimrc`: basic Vim settings.
 - `.bin/`: small helper commands.
 - `.newsboat/`: Newsboat RSS settings.
@@ -57,15 +58,15 @@ Each file in `.bin/` is a command.
    cd ~/.dotfiles
    ```
 
-3. Run make:
+3. Run setup:
 
    ```bash
-   make
+   ./setup.sh
    ```
 
-## What `make` does
+## What `setup.sh` does
 
-The `make` command links the files in this repo to your home directory.
+The `setup.sh` command links the files in this repo to your home directory.
 If a file already exists, you may need to back it up first.
 
 ## Update
@@ -74,7 +75,7 @@ To get the latest changes:
 
 ```bash
 git pull
-make
+./setup.sh
 ```
 
 ## Test
@@ -82,7 +83,7 @@ make
 To run tests:
 
 ```bash
-make test
+./test.sh
 ```
 
 This uses `bats`. You need to install it first.
@@ -90,4 +91,4 @@ This uses `bats`. You need to install it first.
 ## Notes
 
 - This repo is for personal use, but you can read it as an example.
-- Please check the files before you run `make`.
+- Please check the files before you run `setup.sh`.
