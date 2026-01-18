@@ -1,3 +1,8 @@
+install:
+	mkdir -p ~/.bin ~/.test
+	cp -a .bin/. ~/.bin/
+	cp -a .test/. ~/.test/
+
 setup:
 	rm -rf ~/.vim
 	rm -f ~/.vimrc
@@ -12,4 +17,4 @@ setup:
 test:
 	bats .test/
 
-.PHONY: setup test
+.PHONY: install setup test
