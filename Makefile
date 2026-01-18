@@ -1,3 +1,5 @@
+all: setup
+
 install:
 	mkdir -p ~/.bin ~/.test ~/.newsboat ~/.config
 	cp -a .bin/. ~/.bin/
