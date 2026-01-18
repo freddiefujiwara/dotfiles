@@ -136,3 +136,52 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"<rss version=\"2.0\""* ]]
 }
+
+@test "falls back to BSD date parsing when GNU date fails" {
+  temp_dir="$(mktemp -d)"
+  temp_json="$(mktemp)"
+
+  cat > "$temp_dir/date" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "-u" && "$2" == "-d" ]]; then
+  exit 1
+fi
+if [[ "$1" == "-u" && "$2" == "-j" && "$3" == "-f" ]]; then
+  echo "Mon, 01 Jan 2024 00:00:00 +0000"
+  exit 0
+fi
+exit 1
+EOF
+  chmod +x "$temp_dir/date"
+
+  cat > "$temp_json" <<'EOF'
+{"tweets":[{"id":"1","author":{"name":"Alice","username":"alice"},"text":"hello","createdAt":"Mon Jan 01 00:00:00 +0000 2024"}]}
+EOF
+
+  run env PATH="$temp_dir:$PATH" bash "$SCRIPT" "$temp_json"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"<pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>"* ]]
+
+  rm -rf "$temp_dir" "$temp_json"
+}
+
+@test "falls back to raw date string when parsing fails" {
+  temp_dir="$(mktemp -d)"
+  temp_json="$(mktemp)"
+
+  cat > "$temp_dir/date" <<'EOF'
+#!/usr/bin/env bash
+exit 1
+EOF
+  chmod +x "$temp_dir/date"
+
+  cat > "$temp_json" <<'EOF'
+{"tweets":[{"id":"2","author":{"name":"Bob","username":"bob"},"text":"hi","createdAt":"raw-date-string"}]}
+EOF
+
+  run env PATH="$temp_dir:$PATH" bash "$SCRIPT" "$temp_json"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"<pubDate>raw-date-string</pubDate>"* ]]
+
+  rm -rf "$temp_dir" "$temp_json"
+}
