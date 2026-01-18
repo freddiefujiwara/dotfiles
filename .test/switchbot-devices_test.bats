@@ -63,7 +63,7 @@ teardown() {
   rm -rf "$TEST_DIR"
 }
 
-@test "device 一覧取得 API を叩く" {
+@test "call devices list API" {
   run "$ROOT/.bin/switchbot-devices"
   [ "$status" -eq 0 ]
   [[ "$output" == *'"status":"ok"'* ]]
