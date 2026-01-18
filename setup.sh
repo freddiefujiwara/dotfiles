@@ -17,7 +17,7 @@ mkdir -p "$dotfiles_dir/.vim"
 ln -s "$dotfiles_dir/.vim" "$HOME/"
 
 curl_bin="$(command -v curl)"
-curl_args=(-fLo --create-dirs)
+curl_args=(-fL --create-dirs -o)
 if [[ "$curl_bin" == /mingw64/bin/curl ]]; then
   curl_args+=(--ssl-no-revoke)
 fi
