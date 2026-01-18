@@ -30,8 +30,6 @@ Plug 'editorconfig/editorconfig-vim'
 "" auto complete
 Plug 'ervandew/supertab'
 "" snippet
-Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
 "" auto bracket
 Plug 'Raimondi/delimitMate'
 "" auto format
