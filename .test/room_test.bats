@@ -67,6 +67,21 @@ teardown() {
   [[ ! "${output}" =~ "Genre:" ]]
 }
 
+@test "Function: Collections available but collects file missing" {
+  cat <<EOF > "$TEST_DIR/bin/curl"
+#!/bin/bash
+if [[ "\$*" == *"collections"* ]]; then
+  echo '{"data": [{"id": "100", "name": "Test Genre"}]}' > collections.json
+fi
+EOF
+  chmod +x "$TEST_DIR/bin/curl"
+
+  run run_process
+  [ "$status" -eq 0 ]
+  [[ "${output}" =~ "Genre: Test Genre" ]]
+  [[ ! "${output}" =~ "Collect ID:" ]]
+}
+
 @test "Script: Run directly (Fill the last 5% coverage)" {
   # This runs the script as a separate process
   # Because we changed PATH, it still uses our fake curl
