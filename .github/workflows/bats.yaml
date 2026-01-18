@@ -14,4 +14,4 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y bats
 
       - name: Run bats tests
-        run: make test
+        run: ./test.sh
