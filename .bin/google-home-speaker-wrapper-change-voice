@@ -28,4 +28,5 @@ awk -v openai_line="$OPENAI_LINE" -v gtts_line="$GTTS_LINE" '
 ' "$TARGET" > "$TMP_FILE"
 
 mv "$TMP_FILE" "$TARGET"
+chmod 755 "$TARGET"
 trap - EXIT
