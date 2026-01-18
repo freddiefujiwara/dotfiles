@@ -2,20 +2,12 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 . "$SCRIPT_DIR/switchbot-common"
 
-while getopts d:c: option
-do
-  case "${option}"
-    in
-    d) deviceid=${OPTARG};;
-    c) com=${OPTARG};;
+while getopts d:c: option; do
+  case "${option}" in
+    d) deviceid=${OPTARG} ;;
+    c) com=${OPTARG} ;;
   esac
 done
-# arg check
-if test -z $deviceid || test -z $com;
-then
-  echo "Usage $0 -d <deviceid> -c <command>"
-  exit 1;
-fi
-command='{"command": "'$com'","parameter": "default","commandType": "command"}'
-
+[[ -z ${deviceid:-} || -z ${com:-} ]] && { echo "Usage $0 -d <deviceid> -c <command>"; exit 1; }
+command=$(printf '{"command":"%s","parameter":"default","commandType":"command"}' "$com")
 switchbot_post "/devices/${deviceid}/commands" "${command}" | jq

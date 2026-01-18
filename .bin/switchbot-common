@@ -10,10 +10,9 @@ switchbot_api_base() {
 }
 
 switchbot_auth() {
-  token=$(cat "$HOME/.switchbot.tk")
-  secret=$(cat "$HOME/.switchbot.sc")
+  token=$(<"$HOME/.switchbot.tk")
+  secret=$(<"$HOME/.switchbot.sc")
   nonce=$(uuidgen)
-
   t=$(($(date +%s)*1000))
   sign=$(printf "%s" "${token}${t}${nonce}" | openssl dgst -sha256 -hmac "$secret" -binary | base64)
 }

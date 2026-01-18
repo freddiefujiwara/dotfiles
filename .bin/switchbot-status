@@ -2,17 +2,10 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 . "$SCRIPT_DIR/switchbot-common"
 
-while getopts d: option
-do
-  case "${option}"
-    in
-    d) deviceid=${OPTARG};;
+while getopts d: option; do
+  case "${option}" in
+    d) deviceid=${OPTARG} ;;
   esac
 done
-# arg check
-if test -z $deviceid;
-then
-  echo "Usage $0 -d <deviceid>"
-  exit 1;
-fi
+[[ -z ${deviceid:-} ]] && { echo "Usage $0 -d <deviceid>"; exit 1; }
 switchbot_get "/devices/${deviceid}/status" | jq
