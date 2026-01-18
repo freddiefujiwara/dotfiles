@@ -1,22 +1,18 @@
 #!/bin/sh
-while getopts i:h:v: option
-do
-  case "${option}"
-    in
-    i) ID=${OPTARG};;
-    h) HOST=${OPTARG};;
-    v) VOLUME=${OPTARG};;
+while getopts i:h:v: option; do
+  case "${option}" in
+    i) ID=${OPTARG} ;;
+    h) HOST=${OPTARG} ;;
+    v) VOLUME=${OPTARG} ;;
   esac
 done
-# arg check
-if test -z $ID || test -z $HOST || test -z $VOLUME;
-then
+test -z "${ID:-}" || test -z "${HOST:-}" || test -z "${VOLUME:-}" && {
   echo "Usage $0 -i <id> -h <host> -v <volume>"
-  exit 1;
-fi
+  exit 1
+}
 
-echo $0 -i $ID -h $HOST -v $VOLUME
-catt -d $HOST stop
-catt -d $HOST volume $VOLUME
-catt -d $HOST cast https://youtu.be/$ID
-catt -d $HOST status
+echo "$0 -i $ID -h $HOST -v $VOLUME"
+catt -d "$HOST" stop
+catt -d "$HOST" volume "$VOLUME"
+catt -d "$HOST" cast "https://youtu.be/$ID"
+catt -d "$HOST" status

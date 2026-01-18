@@ -1,26 +1,22 @@
 #!/bin/sh
-while getopts v:s:h: option
-do
-  case "${option}"
-    in
-    v) VOLUME=${OPTARG};;
-    s) SPEAK=${OPTARG};;
-    h) HOST=${OPTARG};;
+while getopts v:s:h: option; do
+  case "${option}" in
+    v) VOLUME=${OPTARG} ;;
+    s) SPEAK=${OPTARG} ;;
+    h) HOST=${OPTARG} ;;
   esac
 done
-# arg check
-if test -z $SPEAK || test -z $VOLUME || test -z $HOST;
-then
+test -z "${SPEAK:-}" || test -z "${VOLUME:-}" || test -z "${HOST:-}" && {
   echo "Usage $0 -v <volume> -s <speak> -h <host>"
-  exit 1;
-fi
+  exit 1
+}
 
-echo $0 -v $VOLUME -h $HOST -s $SPEAK
-catt -d $HOST stop
-catt -d $HOST volume $VOLUME
+echo "$0 -v $VOLUME -h $HOST -s $SPEAK"
+catt -d "$HOST" stop
+catt -d "$HOST" volume "$VOLUME"
 TEMP_MP3=$(mktemp /tmp/openai.fm.XXXXXX.mp3)
 #openai.fm.sh $SPEAK $TEMP_MP3
 gtts-cli $SPEAK -l ja -o $TEMP_MP3
-catt -d $HOST cast $TEMP_MP3
-catt -d $HOST status
-rm -f $TEMP_MP3
+catt -d "$HOST" cast "$TEMP_MP3"
+catt -d "$HOST" status
+rm -f "$TEMP_MP3"
