@@ -16,7 +16,13 @@ ln -s "$dotfiles_dir/vimrc/_vimrc" "$HOME/.vimrc"
 mkdir -p "$dotfiles_dir/.vim"
 ln -s "$dotfiles_dir/.vim" "$HOME/"
 
-curl -fLo "$HOME/.vim/autoload/plug.vim" --create-dirs \
+curl_bin="$(command -v curl)"
+curl_args=(-fLo --create-dirs)
+if [[ "$curl_bin" == /mingw64/bin/curl ]]; then
+  curl_args+=(--ssl-no-revoke)
+fi
+
+"$curl_bin" "${curl_args[@]}" "$HOME/.vim/autoload/plug.vim" \
   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-curl -fLo "$HOME/.local/share/nvim/site/autoload/plug.vim" --create-dirs \
+"$curl_bin" "${curl_args[@]}" "$HOME/.local/share/nvim/site/autoload/plug.vim" \
   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
