@@ -47,6 +47,8 @@ if !empty(globpath(&rtp, 'colors/gruvbox.vim'))
 else
   colorscheme default
 endif
+highlight CursorLine cterm=NONE ctermbg=236 guibg=#3c3836
+highlight CursorLineNr cterm=bold ctermfg=214 ctermbg=236 guifg=#fabd2f guibg=#3c3836
 "for search
 set ignorecase
 set smartcase
