@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+MODE="${1-}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+TARGET="$SCRIPT_DIR/google-home-speaker-wrapper"
+
+if [ ! -f "$TARGET" ]; then
+  echo "Target not found: $TARGET" >&2
+  exit 1
+fi
+
+if [ "$MODE" = "openai" ]; then
+  OPENAI_LINE='openai.fm.sh $SPEAK $TEMP_MP3'
+  GTTS_LINE='#gtts-cli $SPEAK -l ja -o $TEMP_MP3'
+else
+  OPENAI_LINE='#openai.fm.sh $SPEAK $TEMP_MP3'
+  GTTS_LINE='gtts-cli $SPEAK -l ja -o $TEMP_MP3'
+fi
+
+TMP_FILE="$(mktemp)"
+trap 'rm -f "$TMP_FILE"' EXIT
+
+awk -v openai_line="$OPENAI_LINE" -v gtts_line="$GTTS_LINE" '
+  $0 ~ /^#?openai\.fm\.sh \$SPEAK \$TEMP_MP3$/ { print openai_line; next }
+  $0 ~ /^#?gtts-cli \$SPEAK -l ja -o \$TEMP_MP3$/ { print gtts_line; next }
+  { print }
+' "$TARGET" > "$TMP_FILE"
+
+mv "$TMP_FILE" "$TARGET"
+trap - EXIT
