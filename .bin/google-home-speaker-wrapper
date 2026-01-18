@@ -16,7 +16,7 @@ catt -d "$HOST" stop
 catt -d "$HOST" volume "$VOLUME"
 TEMP_MP3=$(mktemp /tmp/openai.fm.XXXXXX.mp3)
 #openai.fm.sh $SPEAK $TEMP_MP3
-gtts-cli "$SPEAK" -l ja -o "$TEMP_MP3"
+gtts-cli $SPEAK -l ja -o $TEMP_MP3
 catt -d "$HOST" cast "$TEMP_MP3"
 catt -d "$HOST" status
 rm -f "$TEMP_MP3"
