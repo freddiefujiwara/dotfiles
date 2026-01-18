@@ -9,5 +9,5 @@ while getopts d:c: option; do
   esac
 done
 [[ -z ${deviceid:-} || -z ${com:-} ]] && { echo "Usage $0 -d <deviceid> -c <command>"; exit 1; }
-command=$(printf '{"command":"%s","parameter":"default","commandType":"command"}' "$com")
+command=$(printf '{"command": "%s","parameter": "default","commandType": "command"}' "$com")
 switchbot_post "/devices/${deviceid}/commands" "${command}" | jq
