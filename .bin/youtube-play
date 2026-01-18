@@ -18,8 +18,5 @@ fi
 echo $0 -i $ID -h $HOST -v $VOLUME
 catt -d $HOST stop
 catt -d $HOST volume $VOLUME
-#MP4=`yt-dlp https://youtu.be/$ID --get-url --format "bestaudio[ext=m4a]/mp4"`
-#echo google-home-audioplay $HOST $MP4;
-#google-home-audioplay $HOST $MP4
 catt -d $HOST cast https://youtu.be/$ID
 catt -d $HOST status

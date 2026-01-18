@@ -1,0 +1,48 @@
+#!/bin/bash
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  echo "Usage: source ${BASH_SOURCE[0]}"
+  exit 1
+fi
+
+switchbot_api_base() {
+  echo "${SWITCHBOT_API_BASE:-https://api.switch-bot.com/v1.1}"
+}
+
+switchbot_auth() {
+  token=$(cat "$HOME/.switchbot.tk")
+  secret=$(cat "$HOME/.switchbot.sc")
+  nonce=$(uuidgen)
+
+  t=$(($(date +%s)*1000))
+  sign=$(printf "%s" "${token}${t}${nonce}" | openssl dgst -sha256 -hmac "$secret" -binary | base64)
+}
+
+switchbot_wget() {
+  local url=$1
+  shift
+
+  wget -O -\
+    --header="Content-Type: application/json"\
+    --header="Authorization: ${token}"\
+    --header="sign: ${sign}"\
+    --header="nonce: ${nonce}"\
+    --header="t: ${t}"\
+    "$@"\
+    "${url}"
+}
+
+switchbot_get() {
+  local path=$1
+
+  switchbot_auth
+  switchbot_wget "$(switchbot_api_base)${path}"
+}
+
+switchbot_post() {
+  local path=$1
+  local payload=$2
+
+  switchbot_auth
+  switchbot_wget "$(switchbot_api_base)${path}" --post-data="${payload}"
+}
