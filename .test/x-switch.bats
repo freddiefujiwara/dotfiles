@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 setup() {
-  # テスト用 HOME を作る
+  # create HOME for tests
   export TEST_HOME
   TEST_HOME="$(mktemp -d)"
   export REAL_HOME=$HOME
@@ -10,7 +10,7 @@ setup() {
 
   mkdir -p "$HOME/.config/x-cli"
 
-  # ダミー auth ファイル作成
+  # create dummy auth file
   echo "anemone" > "$HOME/.config/x-cli/auth.json.anemone_cancer"
   echo "freddie" > "$HOME/.config/x-cli/auth.json.freddiefujiwara"
 }
@@ -19,7 +19,7 @@ teardown() {
   rm -rf "$TEST_HOME"
 }
 
-@test "anemone を指定すると auth.json が anemone を指す" {
+@test "with anemone: auth.json points to anemone" {
   run "$ROOT/.bin/x-switch.sh" anemone
 
   [ "$status" -eq 0 ]
@@ -27,7 +27,7 @@ teardown() {
   [[ "$output" == *"auth.json -> auth.json.anemone_cancer"* ]]
 }
 
-@test "freddie を指定すると auth.json が freddie を指す" {
+@test "with freddie: auth.json points to freddie" {
   run "$ROOT/.bin/x-switch.sh" freddie
 
   [ "$status" -eq 0 ]
@@ -35,14 +35,14 @@ teardown() {
   [[ "$output" == *"auth.json -> auth.json.freddiefujiwara"* ]]
 }
 
-@test "不正な引数を渡すと失敗する" {
+@test "invalid args fail" {
   run "$ROOT/.bin/x-switch.sh" unknown
 
   [ "$status" -eq 1 ]
   [[ "$output" == *"Usage:"* ]]
 }
 
-@test "引数なしの場合も失敗する" {
+@test "no args also fail" {
   run "$ROOT/.bin/x-switch.sh"
 
   [ "$status" -eq 1 ]

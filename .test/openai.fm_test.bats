@@ -53,13 +53,13 @@ teardown() {
   rm -f output.mp3
 }
 
-@test "引数なし: Usage 表示して exit 1" {
+@test "no args: show usage and exit 1" {
   run "$SUT"
   [ "$status" -eq 1 ]
   [[ "$output" == *"Usage:"* ]]
 }
 
-@test "2引数: mp3出力してファイル名を表示" {
+@test "two args: write mp3 and print filename" {
   run "$SUT" "hello" "output.mp3"
   [ "$status" -eq 0 ]
   [ -f "output.mp3" ]

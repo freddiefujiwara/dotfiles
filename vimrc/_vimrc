@@ -4,3 +4,4 @@ source ~/.dotfiles/vimrc/vimfiler
 source ~/.dotfiles/vimrc/scala
 source ~/.dotfiles/vimrc/gocode
 source ~/.dotfiles/vimrc/airline
+source ~/.dotfiles/vimrc/floaterm

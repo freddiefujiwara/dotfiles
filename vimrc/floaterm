@@ -1,0 +1,12 @@
+" floaterm トグル
+nnoremap <leader>t :FloatermToggle<CR>
+tnoremap <leader>t <C-\><C-n>:FloatermToggle<CR>
+
+" 主要コマンド（毎回新しいfloatermを開いて実行）
+nnoremap <leader>ai :FloatermNew --autoclose=0 bash -lc "npm run agents:init"<CR>
+nnoremap <leader>as :FloatermNew --autoclose=0 bash -lc "npm run test:seed"<CR>
+nnoremap <leader>ae :FloatermNew --autoclose=0 bash -lc "npm run test:e2e"<CR>
+nnoremap <leader>au :FloatermNew --autoclose=0 bash -lc "npm run test:ui"<CR>
+nnoremap <leader>ad :FloatermNew --autoclose=0 bash -lc "npm run test:debug"<CR>
+
+tnoremap <Esc> <C-\><C-n>

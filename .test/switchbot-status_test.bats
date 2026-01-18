@@ -63,13 +63,13 @@ teardown() {
   rm -rf "$TEST_DIR"
 }
 
-@test "引数なし: Usage 表示して exit 1" {
+@test "no args: show usage and exit 1" {
   run "$ROOT/.bin/switchbot-status"
   [ "$status" -eq 1 ]
   [[ "$output" == *"Usage"* ]]
 }
 
-@test "device を指定すると status API を叩く" {
+@test "with device: call status API" {
   run "$ROOT/.bin/switchbot-status" -d device123
   [ "$status" -eq 0 ]
   [[ "$output" == *'"status":"ok"'* ]]

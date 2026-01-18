@@ -42,4 +42,5 @@ Plug 'Chiel92/vim-autoformat'
 Plug 'scrooloose/syntastic'
 "" delete white space
 Plug 'bronson/vim-trailing-whitespace'
+Plug 'voldikss/vim-floaterm'
 call plug#end()

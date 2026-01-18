@@ -63,7 +63,7 @@ teardown() {
   rm -rf "$TEST_DIR"
 }
 
-@test "switchbot_post が共通ヘッダとURLで実行される" {
+@test "switchbot_post uses shared headers and URL" {
   run bash -c "source '$ROOT/.bin/switchbot-common'; switchbot_post '/devices/device123/commands' '{\"command\":\"on\"}'"
   [ "$status" -eq 0 ]
   grep -q "https://api.switch-bot.com/v1.1/devices/device123/commands" "$WGET_ARGS_FILE"
@@ -72,7 +72,7 @@ teardown() {
   grep -q -- '--post-data={"command":"on"}' "$WGET_ARGS_FILE"
 }
 
-@test "switchbot_get が共通ヘッダとURLで実行される" {
+@test "switchbot_get uses shared headers and URL" {
   run bash -c "source '$ROOT/.bin/switchbot-common'; switchbot_get '/devices/device123/status'"
   [ "$status" -eq 0 ]
   grep -q "https://api.switch-bot.com/v1.1/devices/device123/status" "$WGET_ARGS_FILE"
@@ -80,13 +80,13 @@ teardown() {
   grep -q -- '--header=sign: basesig' "$WGET_ARGS_FILE"
 }
 
-@test "switchbot_api_base が環境変数を優先する" {
+@test "switchbot_api_base uses env var first" {
   run bash -c "source '$ROOT/.bin/switchbot-common'; SWITCHBOT_API_BASE='https://example.invalid/v1.1' switchbot_api_base"
   [ "$status" -eq 0 ]
   [ "$output" = "https://example.invalid/v1.1" ]
 }
 
-@test "switchbot-common を単体実行すると失敗する" {
+@test "running switchbot-common alone fails" {
   run "$ROOT/.bin/switchbot-common"
   [ "$status" -eq 1 ]
   [[ "$output" == *"Usage:"* ]]

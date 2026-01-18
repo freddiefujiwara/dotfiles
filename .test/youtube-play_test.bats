@@ -21,13 +21,13 @@ teardown() {
   rm -rf "$TEST_DIR"
 }
 
-@test "引数なし: Usage 表示して exit 1" {
+@test "no args: show usage and exit 1" {
   run "$ROOT/.bin/youtube-play"
   [ "$status" -eq 1 ]
   [[ "$output" == *"Usage"* ]]
 }
 
-@test "ID/host/volume を指定すると catt を順に呼ぶ" {
+@test "with ID/host/volume: call catt in order" {
   run "$ROOT/.bin/youtube-play" -i abc123 -h livingroom -v 10
   [ "$status" -eq 0 ]
   [[ "$output" == *"-i abc123 -h livingroom -v 10"* ]]

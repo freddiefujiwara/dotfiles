@@ -41,7 +41,7 @@ teardown() {
   rm -rf "$TEST_DIR"
 }
 
-@test "正常系: 指定したホスト/音量/文章で実行する" {
+@test "happy path: run with host, volume, and text" {
   run "$ROOT/.bin/google-home-speaker-wrapper" -v 10 -s "hello" -h "livingroom"
 
   [ "$status" -eq 0 ]
@@ -58,7 +58,7 @@ teardown() {
   [ ! -f "$mp3_path" ]
 }
 
-@test "異常系: 引数不足の場合はエラー" {
+@test "error: not enough args" {
   run "$ROOT/.bin/google-home-speaker-wrapper" -v 10 -s "hello"
 
   [ "$status" -eq 1 ]
