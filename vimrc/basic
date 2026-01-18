@@ -39,6 +39,9 @@ filetype plugin indent on
 if has('termguicolors')
   set termguicolors
 endif
+if &t_Co < 256
+  set t_Co=256
+endif
 set background=dark
 let g:gruvbox_contrast_dark = 'medium'
 let g:gruvbox_sign_column = 'bg0'
