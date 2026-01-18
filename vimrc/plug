@@ -1,8 +1,14 @@
 call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'sheerun/vim-polyglot'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
+Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-sleuth'
+Plug 'tpope/vim-surround'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+Plug 'morhetz/gruvbox'
+Plug 'sheerun/vim-polyglot'
 Plug 'https://github.com/Shougo/unite.vim.git'
 Plug 'https://github.com/thinca/vim-ref.git'
 Plug 'https://github.com/thinca/vim-quickrun.git'
@@ -20,19 +26,16 @@ Plug 'https://github.com/majutsushi/tagbar.git'
 Plug 'https://github.com/nathanaelkane/vim-indent-guides'
 Plug 'https://github.com/scrooloose/nerdtree.git'
 Plug 'https://github.com/szw/vim-tags.git'
-Plug 'https://github.com/tomasr/molokai.git'
 Plug 'https://github.com/vim-scripts/errormarker.vim.git'
 Plug 'https://github.com/wincent/Command-T.git'
 Plug 'editorconfig/editorconfig-vim'
 "" auto complete
-Plug 'sheerun/vim-polyglot'
 Plug 'ervandew/supertab'
 "" snippet
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 "" auto bracket
 Plug 'Raimondi/delimitMate'
-Plug 'tpope/vim-surround'
 "" auto format
 Plug 'Chiel92/vim-autoformat'
 "" error detect
