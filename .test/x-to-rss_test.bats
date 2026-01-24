@@ -15,7 +15,7 @@ setup() {
   # Resolve repo root as the parent of .test/
   ROOT="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   SCRIPT="$ROOT/.bin/x-to-rss.sh"
-  FIXTURE="$BATS_TEST_DIRNAME/x-to-rss.json"
+  FIXTURE="$BATS_TEST_DIRNAME/x-to-rss_test.json"
 
   command -v jq >/dev/null 2>&1 || skip "jq is required"
 
