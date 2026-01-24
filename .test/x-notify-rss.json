@@ -1,0 +1,64 @@
+[
+  {
+    "id": "notif_1",
+    "kind": "like",
+    "actors": [
+      {
+        "name": "Alice",
+        "username": "alice"
+      }
+    ],
+    "tweet": {
+      "id": "12345",
+      "author": {
+        "username": "testuser"
+      },
+      "text": "Hello world!",
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "id": "notif_2",
+    "kind": "follow",
+    "actors": [
+      {
+        "name": "Bob",
+        "username": "bob"
+      }
+    ],
+    "tweet": null
+  },
+  {
+    "id": "notif_3",
+    "kind": "retweet",
+    "actors": [
+      {
+        "name": "Charlie",
+        "username": "charlie"
+      }
+    ],
+    "tweet": {
+      "id": "67890",
+      "author": {
+        "username": "testuser"
+      },
+      "text": "Another tweet for testing purposes.\\nIt has newlines.",
+      "createdAt": "2024-01-02T12:30:00Z"
+    }
+  },
+  {
+    "id": "notif_4",
+    "kind": "like",
+    "actors": [
+      {}
+    ],
+    "tweet": {
+      "id": "11223",
+      "author": {
+        "username": "anotheruser"
+      },
+      "text": "Tweet from a user with no actor name/username.",
+      "createdAt": "2024-01-03T10:00:00Z"
+    }
+  }
+]
