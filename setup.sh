@@ -10,6 +10,7 @@ cp -a "$dotfiles_dir/.test/." "$HOME/.test/"
 cp -a "$dotfiles_dir/.newsboat/." "$HOME/.newsboat/"
 cp -a "$dotfiles_dir/.config/." "$HOME/.config/"
 cp -a "$dotfiles_dir/.muttrc" "$HOME/"
+cp -a "$dotfiles_dir/.codex/." "$HOME/.codex/"
 
 rm -rf "$HOME/.vim"
 rm -f "$HOME/.vimrc"
