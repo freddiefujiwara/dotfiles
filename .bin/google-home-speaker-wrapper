@@ -1,22 +1,36 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage: $0 -v <volume> -s <speak> -h <host>" >&2
+}
+
+VOLUME=""
+SPEAK=""
+HOST=""
 while getopts v:s:h: option; do
   case "${option}" in
     v) VOLUME=${OPTARG} ;;
     s) SPEAK=${OPTARG} ;;
     h) HOST=${OPTARG} ;;
+    *) usage; exit 1 ;;
   esac
 done
-test -z "${SPEAK:-}" || test -z "${VOLUME:-}" || test -z "${HOST:-}" && {
-  echo "Usage $0 -v <volume> -s <speak> -h <host>"
+
+if [[ -z $SPEAK || -z $VOLUME || -z $HOST ]]; then
+  usage
   exit 1
-}
+fi
 
 echo "$0 -v $VOLUME -h $HOST -s $SPEAK"
 catt -d "$HOST" stop
 catt -d "$HOST" volume "$VOLUME"
-TEMP_MP3=$(mktemp /tmp/openai.fm.XXXXXX.mp3)
+TEMP_MP3="$(mktemp /tmp/openai.fm.XXXXXX.mp3)"
+cleanup() {
+  rm -f "$TEMP_MP3"
+}
+trap cleanup EXIT
 #openai.fm.sh $SPEAK $TEMP_MP3
 gtts-cli $SPEAK -l ja -o $TEMP_MP3
 catt -d "$HOST" cast "$TEMP_MP3"
 catt -d "$HOST" status
-rm -f "$TEMP_MP3"
