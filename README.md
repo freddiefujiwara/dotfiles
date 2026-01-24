@@ -8,6 +8,7 @@ It is very small and simple.
 - `setup.sh`: install and link the dotfiles.
 - `test.sh`: run tests with `bats`.
 - `vimrc`: basic Vim settings.
+- `.muttrc`: Mutt email client settings.
 - `.bin/`: small helper commands.
 - `.newsboat/`: Newsboat RSS settings.
 - `.config/`: app configuration files.

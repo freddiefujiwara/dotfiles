@@ -1,0 +1,113 @@
+########################################
+# 基本設定
+########################################
+
+set charset = "utf-8"
+set send_charset = "utf-8"
+set editor = "vim"
+set mbox_type = mbox
+set mail_check = 60
+set timeout = 10
+set pager_stop
+set menu_scroll
+set check_new = yes
+
+########################################
+# 表示・操作
+########################################
+
+set sort = reverse-date
+unset sort_aux
+set date_format = "%Y-%m-%d %H:%M"
+set index_format = "%4C %Z %{%Y-%m-%d %H:%M} %-15.15F (%4c) %s"
+set read_inc = 100
+set write_inc = 100
+set net_inc = 100
+
+########################################
+# ローカルメール
+########################################
+
+set spoolfile = "/var/mail/fumikazu"
+
+########################################
+# Gmail (IMAP)
+########################################
+
+set imap_user = "zegenvs@gmail.com"
+set imap_pass = "`cat ~/.gmail`"
+
+set folder = "imaps://imap.gmail.com:993"
+set spoolfile = "+INBOX"
+set record = "+[Gmail]/Sent Mail"
+set postponed = "+[Gmail]/Drafts"
+set trash = "+[Gmail]/Trash"
+
+set ssl_force_tls = yes
+set ssl_starttls = yes
+set imap_check_subscribed = yes
+unset imap_passive
+########################################
+## IMAP キャッシュ（最重要）
+#########################################
+set header_cache = "~/.cache/mutt/headers"
+set message_cachedir = "~/.cache/mutt/bodies"
+set certificate_file=~/.mutt/certificates
+set imap_idle=no
+set imap_fetch_chunk_size=65536
+set imap_pipeline_depth=1
+set imap_keepalive = 300
+########################################
+# 両方のメールボックスを登録
+########################################
+
+mailboxes \
+  /var/mail/fumikazu \
+  imaps://imap.gmail.com/INBOX
+
+########################################
+# Sidebar（フォルダ一覧）
+########################################
+
+set sidebar_visible = yes
+set sidebar_width = 30
+set sidebar_short_path = yes
+set sidebar_sort_method = alpha
+set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?"
+
+bind index,pager \CP sidebar-prev
+bind index,pager \CM sidebar-next
+bind index,pager \CO sidebar-open
+bind index,pager \CB sidebar-toggle-visible
+
+########################################
+# Gmail向け調整
+########################################
+
+# 既読管理を安定させる
+set mark_old = no
+set delete = ask-yes
+
+# Gmail特有の不要ラベルを隠したい場合（任意）
+unmailboxes imaps://imap.gmail.com/[Gmail]/All Mail
+
+########################################
+# キーバインド
+########################################
+
+bind index gg first-entry
+bind index G  last-entry
+bind pager j next-line
+bind pager k previous-line
+
+########################################
+# 署名
+########################################
+
+set signature = "~/.signature"
+########################################
+# mailcap to w3m
+########################################
+set mailcap_path="~/.mailcap:/etc/mailcap"
+set implicit_autoview=yes
+auto_view text/html
