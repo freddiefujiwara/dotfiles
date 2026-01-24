@@ -1,5 +1,5 @@
 ########################################
-# 基本設定
+# Basic settings
 ########################################
 
 set charset = "utf-8"
@@ -13,7 +13,7 @@ set menu_scroll
 set check_new = yes
 
 ########################################
-# 表示・操作
+# Display and actions
 ########################################
 
 set sort = reverse-date
@@ -25,7 +25,7 @@ set write_inc = 100
 set net_inc = 100
 
 ########################################
-# ローカルメール
+# Local mail
 ########################################
 
 set spoolfile = "/var/mail/fumikazu"
@@ -48,7 +48,7 @@ set ssl_starttls = yes
 set imap_check_subscribed = yes
 unset imap_passive
 ########################################
-## IMAP キャッシュ（最重要）
+## IMAP cache (most important)
 #########################################
 set header_cache = "~/.cache/mutt/headers"
 set message_cachedir = "~/.cache/mutt/bodies"
@@ -58,7 +58,7 @@ set imap_fetch_chunk_size=65536
 set imap_pipeline_depth=1
 set imap_keepalive = 300
 ########################################
-# 両方のメールボックスを登録
+# Register both mailboxes
 ########################################
 
 mailboxes \
@@ -66,7 +66,7 @@ mailboxes \
   imaps://imap.gmail.com/INBOX
 
 ########################################
-# Sidebar（フォルダ一覧）
+# Sidebar (folder list)
 ########################################
 
 set sidebar_visible = yes
@@ -81,18 +81,18 @@ bind index,pager \CO sidebar-open
 bind index,pager \CB sidebar-toggle-visible
 
 ########################################
-# Gmail向け調整
+# Gmail tweaks
 ########################################
 
-# 既読管理を安定させる
+# Keep read/unread state stable
 set mark_old = no
 set delete = ask-yes
 
-# Gmail特有の不要ラベルを隠したい場合（任意）
+# Optional: hide Gmail-specific labels you do not need
 unmailboxes imaps://imap.gmail.com/[Gmail]/All Mail
 
 ########################################
-# キーバインド
+# Key bindings
 ########################################
 
 bind index gg first-entry
@@ -101,7 +101,7 @@ bind pager j next-line
 bind pager k previous-line
 
 ########################################
-# 署名
+# Signature
 ########################################
 
 set signature = "~/.signature"
