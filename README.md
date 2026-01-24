@@ -45,6 +45,7 @@ Each file in `.bin/` is a command.
 - `openbox/autostart`: apps that start with Openbox.
 - `tint2/tint2rc`: tint2 panel settings.
 - `tgpt/config.toml`: tgpt provider setting.
+- `nvim/init.vim`: Neovim settings.
 
 ## Quick start
 
