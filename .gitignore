@@ -4,3 +4,6 @@
 .newsboat/history.search
 .newsboat/cache.db.lock
 .codex/skills/
+.agents/
+.gemini/
+.github/skills/
