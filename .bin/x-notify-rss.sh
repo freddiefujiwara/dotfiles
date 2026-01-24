@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 # 入力ファイルの定義
 INPUT_FILE="${1:-/dev/stdin}"

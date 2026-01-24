@@ -1,21 +1,28 @@
-#!/bin/bash
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/switchbot-common"
 
-while getopts d:c: option
-do
-  case "${option}"
-    in
-    d) deviceid=${OPTARG};;
-    c) custom=${OPTARG};;
+usage() {
+  echo "Usage: $0 -d <deviceid> -c <custom>" >&2
+}
+
+deviceid=""
+custom=""
+while getopts d:c: option; do
+  case "${option}" in
+    d) deviceid=${OPTARG} ;;
+    c) custom=${OPTARG} ;;
+    *) usage; exit 1 ;;
   esac
 done
-# arg check
-if test -z $deviceid || test -z $custom;
-then
-  echo "Usage $0 -d <deviceid> -c <custom>"
-  exit 1;
+
+if [[ -z $deviceid || -z $custom ]]; then
+  usage
+  exit 1
 fi
-command='{"command":"'$custom'","parameter":"default","commandType":"customize"}'
+
+command="$(printf '{"command":"%s","parameter":"default","commandType":"customize"}' "$custom")"
 
 switchbot_post "/devices/${deviceid}/commands" "${command}" | jq

@@ -1,15 +1,26 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage: $0 -i <id> -h <host> -v <volume>" >&2
+}
+
+ID=""
+HOST=""
+VOLUME=""
 while getopts i:h:v: option; do
   case "${option}" in
     i) ID=${OPTARG} ;;
     h) HOST=${OPTARG} ;;
     v) VOLUME=${OPTARG} ;;
+    *) usage; exit 1 ;;
   esac
 done
-test -z "${ID:-}" || test -z "${HOST:-}" || test -z "${VOLUME:-}" && {
-  echo "Usage $0 -i <id> -h <host> -v <volume>"
+
+if [[ -z $ID || -z $HOST || -z $VOLUME ]]; then
+  usage
   exit 1
-}
+fi
 
 echo "$0 -i $ID -h $HOST -v $VOLUME"
 catt -d "$HOST" stop

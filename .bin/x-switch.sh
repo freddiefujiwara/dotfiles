@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 DIR="$HOME/.config/x-cli"
+if [[ ! -d $DIR ]]; then
+  echo "Directory not found: $DIR" >&2
+  exit 1
+fi
 cd "$DIR"
 
-case "$1" in
+mode="${1-}"
+case "$mode" in
   anemone)
     ln -sfn auth.json.anemone_cancer auth.json
     ;;
