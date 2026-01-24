@@ -1,14 +1,13 @@
 #!/bin/bash
 
-# 入力ファイルと出力ファイルの定義
-INPUT_FILE="notify.json"
-OUTPUT_FILE="notify.xml"
+# 入力ファイルの定義
+INPUT_FILE="${1:-/dev/stdin}"
 
 # 現在の時刻をRFC 822形式（RSS標準）で取得
 PUB_DATE=$(date -R)
 
 # XMLのヘッダー部分を生成
-cat <<EOF > "$OUTPUT_FILE"
+cat <<EOF
 <?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
 <channel>
@@ -25,13 +24,12 @@ EOF
 # 3. 必要な情報を抽出して整形
 jq -r '.[] | select(.tweet != null) | 
   "<item>\n" +
-  "  <title>" + (.actors[0].name // "Unknown") + " (@" + (.actors[0].username // "unknown") + ") - " + .kind + "</title>\n" +
+  "  <title><![CDATA[" + (.actors[0].name // "Unknown") + " (@" + (.actors[0].username // "unknown") + ") - " + .kind + "]]></title>\n" +
   "  <link>https://twitter.com/" + .tweet.author.username + "/status/" + .tweet.id + "</link>\n" +
   "  <description><![CDATA[" + .tweet.text + "]]></description>\n" +
   "  <pubDate>" + .tweet.createdAt + "</pubDate>\n" +
   "  <guid isPermaLink=\"false\">" + .id + "</guid>\n" +
-  "</item>"' "$INPUT_FILE" >> "$OUTPUT_FILE"
+  "</item>"' "$INPUT_FILE"
 
 # XMLのフッターを閉じる
-echo "</channel></rss>" >> "$OUTPUT_FILE"
-echo "Conversion complete: $OUTPUT_FILE"
+echo "</channel></rss>"
