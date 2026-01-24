@@ -20,12 +20,14 @@ setup() {
     "$DOTFILES_DIR/.test" \
     "$DOTFILES_DIR/.newsboat" \
     "$DOTFILES_DIR/.config" \
+    "$DOTFILES_DIR/.codex" \
     "$DOTFILES_DIR/vimrc"
 
   echo "stub" > "$DOTFILES_DIR/.bin/example"
   echo "stub" > "$DOTFILES_DIR/.test/example"
   echo "stub" > "$DOTFILES_DIR/.newsboat/example"
   echo "stub" > "$DOTFILES_DIR/.config/example"
+  echo "stub" > "$DOTFILES_DIR/.codex/example"
   echo "stub" > "$DOTFILES_DIR/.muttrc"
   echo "stub" > "$DOTFILES_DIR/vimrc/_vimrc"
 
