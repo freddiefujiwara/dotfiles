@@ -13,18 +13,23 @@ Plug 'yetone/avante.nvim', { 'branch': 'main', 'do': 'make' }
 call plug#end()
 lua << EOF
 require('avante').setup({
-  provider = "openai",
-  -- 'openai = { ... }' ではなく 'providers = { openai = { ... } }' に変更
+  provider = "gemini",
   providers = {
     openai = {
       endpoint = "https://api.openai.com/v1",
       model = "gpt-4o",
       timeout = 30000,
-      -- temperatureなどは extra_request_body の中へ移動
       extra_request_body = {
         temperature = 0,
         max_tokens = 4096,
       },
+    },
+    gemini = {
+      endpoint = "https://generativelanguage.googleapis.com/v1beta/models",
+      model = "gemini-flash-latest",
+      timeout = 30000,
+      temperature = 0,
+      max_tokens = 4096,
     },
   },
 })
