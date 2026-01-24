@@ -28,6 +28,7 @@ Each file in `.bin/` is a command.
 - `switchbot-status`: get SwitchBot device status.
 - `switchbot-tv`: set a TV channel with SwitchBot.
 - `x-switch.sh`: switch X (Twitter) CLI auth file.
+- `x-notify-rss.sh`: convert Twitter notification JSON to RSS.
 - `x-to-rss.sh`: convert tweets JSON to RSS.
 - `youtube-play`: cast a YouTube video to Google Home with `catt`.
 
