@@ -24,15 +24,15 @@ if [[ "$INPUT" == "/dev/stdin" ]]; then
   INPUT="$TMP_INPUT"
 fi
 
-# RSS基本情報（必要なら環境変数で上書き可）
+# RSS basics (override with env vars if needed)
 CHANNEL_TITLE="${CHANNEL_TITLE:-Transactions Feed}"
 CHANNEL_LINK="${CHANNEL_LINK:-https://example.invalid/transactions}"
 CHANNEL_DESC="${CHANNEL_DESC:-Converted from JSON transactions}"
 
-# JSONのtimestamp（ISO8601）をRFC822相当にしてRSSに載せる（失敗したらそのまま）
+# Convert JSON timestamp (ISO8601) to RFC822 for RSS (keep raw if it fails)
 timestamp_iso="$(jq -r '.timestamp // empty' "$INPUT")"
 if [[ -n "${timestamp_iso}" ]]; then
-  # macOS(BSD date) / Linux(GNU date) 両対応を試みる
+  # Try macOS (BSD date) and Linux (GNU date)
   if pubdate="$(date -u -d "$timestamp_iso" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
     :
   elif pubdate="$(date -u -j -f "%Y-%m-%dT%H:%M:%S" "${timestamp_iso%%.*}" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
@@ -45,7 +45,7 @@ else
 fi
 
 xml_escape() {
-  # XMLエスケープ（bashのみで簡易対応）
+  # Simple XML escape in bash
   local s="$1"
   s="${s//&/&amp;}"
   s="${s//</&lt;}"
@@ -65,13 +65,13 @@ money_fmt() {
   local sign="+"
   if [[ "$n" =~ ^- ]]; then sign="-"; fi
   local abs="${n#-}"
-  # 3桁区切り
+  # Add thousands separators
   local with_commas
   with_commas="$(printf "%'d" "$abs" 2>/dev/null || echo "$abs")"
   printf "%s¥%s" "$sign" "$with_commas"
 }
 
-# RSS出力開始
+# Start RSS output
 cat <<RSS_EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
@@ -82,7 +82,7 @@ cat <<RSS_EOF
     <lastBuildDate>$(xml_escape "$pubdate")</lastBuildDate>
 RSS_EOF
 
-# transactions を item にする（amount_yen=nullにも対応）
+# Convert transactions to items (supports amount_yen=null)
 jq -c '.transactions[]' "$INPUT" | while IFS= read -r tx; do
   date_str="$(jq -r '.date // ""' <<<"$tx")"
   content="$(jq -r '.content // ""' <<<"$tx")"
@@ -95,10 +95,10 @@ jq -c '.transactions[]' "$INPUT" | while IFS= read -r tx; do
 
   amount_disp="$(money_fmt "${amount:-}")"
 
-  # title: "01/23(金) +¥61,000 振込 フジワラ フミカズ"
+  # title: "01/23(Fri) +¥61,000 Transfer Sample Taro"
   item_title="$(printf "%s %s %s" "$date_str" "$amount_disp" "$content" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')"
 
-  # description はCDDATAにして日本語や記号を安全に
+  # Put description in CDATA for safe text
   desc_lines=()
   desc_lines+=("date: $date_str")
   [[ -n "$amount_disp" ]] && desc_lines+=("amount: $amount_disp")
@@ -109,7 +109,7 @@ jq -c '.transactions[]' "$INPUT" | while IFS= read -r tx; do
 
   desc="$(printf "%s\n" "${desc_lines[@]}")"
 
-  # guid は内容+日付+金額のハッシュ風（完全ユニークでなくてもOK）
+  # guid uses content+date+amount (does not need to be perfectly unique)
   guid_src="$(printf "%s|%s|%s" "$date_str" "$content" "${amount:-null}")"
   guid="$(printf "%s" "$guid_src" | jq -sRr @uri)"
 
@@ -122,7 +122,7 @@ jq -c '.transactions[]' "$INPUT" | while IFS= read -r tx; do
 RSS_EOF
 done
 
-# RSS出力終了
+# End RSS output
 cat <<'RSS_EOF'
   </channel>
 </rss>
