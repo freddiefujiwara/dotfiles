@@ -1,0 +1,35 @@
+{
+  "timestamp": "2024-01-02T03:04:05Z",
+  "transactions": [
+    {
+      "date": "01/23(金)",
+      "content": "振込 サンプル タロウ",
+      "amount_yen": 61000,
+      "account": "現金",
+      "category_main": "収入",
+      "category_sub": "給与",
+      "memo": "test memo",
+      "is_transfer": false
+    },
+    {
+      "date": "01/24(土)",
+      "content": "コンビニ",
+      "amount_yen": -550,
+      "account": "カード",
+      "category_main": "食費",
+      "category_sub": "コンビニ",
+      "memo": "",
+      "is_transfer": true
+    },
+    {
+      "date": "01/25(日)",
+      "content": "貯金",
+      "amount_yen": null,
+      "account": "銀行",
+      "category_main": "移動",
+      "category_sub": "預金",
+      "memo": "",
+      "is_transfer": false
+    }
+  ]
+}
