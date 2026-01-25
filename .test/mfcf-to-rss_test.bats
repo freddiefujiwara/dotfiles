@@ -58,9 +58,9 @@ setup() {
 
 @test "item pubDate uses current year with midnight time" {
   year="$(date "+%Y")"
-  if expected="$(date -d "${year}-01-23T00:00:00" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+  if expected="$(LC_ALL=C TZ=UTC date -u -d "${year}-01-23T00:00:00" "+%a, %d %b %Y %H:%M:%S +0000" 2>/dev/null)"; then
     :
-  elif expected="$(date -j -f "%Y-%m-%dT%H:%M:%S" "${year}-01-23T00:00:00" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+  elif expected="$(LC_ALL=C TZ=UTC date -u -j -f "%Y-%m-%dT%H:%M:%S" "${year}-01-23T00:00:00" "+%a, %d %b %Y %H:%M:%S +0000" 2>/dev/null)"; then
     :
   else
     skip "date command does not support RFC822 formatting"

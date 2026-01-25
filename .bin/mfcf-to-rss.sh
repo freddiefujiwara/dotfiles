@@ -33,24 +33,24 @@ CHANNEL_DESC="${CHANNEL_DESC:-Converted from JSON transactions}"
 timestamp_iso="$(jq -r '.timestamp // empty' "$INPUT")"
 if [[ -n "${timestamp_iso}" ]]; then
   # Try macOS (BSD date) and Linux (GNU date)
-  if pubdate="$(date -u -d "$timestamp_iso" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+  if pubdate="$(LC_ALL=C TZ=UTC date -u -d "$timestamp_iso" "+%a, %d %b %Y %H:%M:%S +0000" 2>/dev/null)"; then
     :
-  elif pubdate="$(date -u -j -f "%Y-%m-%dT%H:%M:%S" "${timestamp_iso%%.*}" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+  elif pubdate="$(LC_ALL=C TZ=UTC date -u -j -f "%Y-%m-%dT%H:%M:%S" "${timestamp_iso%%.*}" "+%a, %d %b %Y %H:%M:%S +0000" 2>/dev/null)"; then
     :
   else
     pubdate="$timestamp_iso"
   fi
 else
-  pubdate="$(date -u "+%a, %d %b %Y %H:%M:%S %z")"
+  pubdate="$(LC_ALL=C TZ=UTC date -u "+%a, %d %b %Y %H:%M:%S +0000")"
 fi
 
 format_rfc822_from_iso() {
   local iso="$1"
-  if formatted="$(date -d "$iso" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+  if formatted="$(LC_ALL=C TZ=UTC date -u -d "$iso" "+%a, %d %b %Y %H:%M:%S +0000" 2>/dev/null)"; then
     printf '%s' "$formatted"
     return
   fi
-  if formatted="$(date -j -f "%Y-%m-%dT%H:%M:%S" "$iso" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+  if formatted="$(LC_ALL=C TZ=UTC date -u -j -f "%Y-%m-%dT%H:%M:%S" "$iso" "+%a, %d %b %Y %H:%M:%S +0000" 2>/dev/null)"; then
     printf '%s' "$formatted"
     return
   fi
