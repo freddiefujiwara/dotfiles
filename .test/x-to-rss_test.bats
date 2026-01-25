@@ -58,7 +58,7 @@ setup() {
 
   [ -n "$channel_title" ]
 
-  [[ "$output" == *"<link>"*"</link>"* ]]
+  [[ "$output" == *"<link>https://x.com/home</link>"* ]]
   [[ "$output" == *"<description>"*"</description>"* ]]
   [[ "$output" == *"<language>"*"</language>"* ]]
 }
