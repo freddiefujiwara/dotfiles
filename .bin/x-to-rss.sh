@@ -12,7 +12,7 @@ JSON_FILE="${1:-/dev/stdin}"
 
 # Feed metadata (customize as you like)
 FEED_TITLE="${FEED_TITLE:-Tweets JSON Feed}"
-FEED_LINK="${FEED_LINK:-https://example.local/}"
+FEED_LINK="${FEED_LINK:-https://x.com/home}"
 FEED_DESC="${FEED_DESC:-Converted from JSON to RSS 2.0}"
 
 # Convert Twitter-style createdAt ("Sat Jan 17 03:39:29 +0000 2026") to RFC822.
