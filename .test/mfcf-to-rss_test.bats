@@ -35,26 +35,48 @@ setup() {
 }
 
 @test "includes default channel metadata when env vars are not set" {
-  unset CHANNEL_TITLE CHANNEL_LINK CHANNEL_DESC
+  unset CHANNEL_TITLE CHANNEL_DESC
 
   run bash "$SCRIPT" "$FIXTURE"
   [ "$status" -eq 0 ]
 
   [[ "$output" == *"<title>Transactions Feed</title>"* ]]
-  [[ "$output" == *"<link>https://example.invalid/transactions</link>"* ]]
+  [[ "$output" == *"<link>https://moneyforward.com/cf</link>"* ]]
   [[ "$output" == *"<description>Converted from JSON transactions</description>"* ]]
 }
 
 @test "channel metadata can be overridden via env vars" {
   CHANNEL_TITLE="My Feed" \
-  CHANNEL_LINK="https://example.com/feed.xml" \
   CHANNEL_DESC="Hello" \
   run bash "$SCRIPT" "$FIXTURE"
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"<title>My Feed</title>"* ]]
-  [[ "$output" == *"<link>https://example.com/feed.xml</link>"* ]]
+  [[ "$output" == *"<link>https://moneyforward.com/cf</link>"* ]]
   [[ "$output" == *"<description>Hello</description>"* ]]
+}
+
+@test "item pubDate uses current year with midnight time" {
+  year="$(date "+%Y")"
+  if expected="$(date -d "${year}-01-23T00:00:00" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+    :
+  elif expected="$(date -j -f "%Y-%m-%dT%H:%M:%S" "${year}-01-23T00:00:00" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+    :
+  else
+    skip "date command does not support RFC822 formatting"
+  fi
+
+  run bash "$SCRIPT" "$FIXTURE"
+  [ "$status" -eq 0 ]
+
+  [[ "$output" == *"<pubDate>${expected}</pubDate>"* ]]
+}
+
+@test "item link uses moneyforward link" {
+  run bash "$SCRIPT" "$FIXTURE"
+  [ "$status" -eq 0 ]
+
+  [[ "$output" == *"<item>"*"<link>https://moneyforward.com/cf</link>"* ]]
 }
 
 @test "emits one <item> per transaction" {

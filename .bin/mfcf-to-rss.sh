@@ -26,7 +26,7 @@ fi
 
 # RSS basics (override with env vars if needed)
 CHANNEL_TITLE="${CHANNEL_TITLE:-Transactions Feed}"
-CHANNEL_LINK="${CHANNEL_LINK:-https://example.invalid/transactions}"
+CHANNEL_LINK="https://moneyforward.com/cf"
 CHANNEL_DESC="${CHANNEL_DESC:-Converted from JSON transactions}"
 
 # Convert JSON timestamp (ISO8601) to RFC822 for RSS (keep raw if it fails)
@@ -43,6 +43,33 @@ if [[ -n "${timestamp_iso}" ]]; then
 else
   pubdate="$(date -u "+%a, %d %b %Y %H:%M:%S %z")"
 fi
+
+format_rfc822_from_iso() {
+  local iso="$1"
+  if formatted="$(date -d "$iso" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+    printf '%s' "$formatted"
+    return
+  fi
+  if formatted="$(date -j -f "%Y-%m-%dT%H:%M:%S" "$iso" "+%a, %d %b %Y %H:%M:%S %z" 2>/dev/null)"; then
+    printf '%s' "$formatted"
+    return
+  fi
+  printf '%s' "$iso"
+}
+
+pubdate_from_mfcf_date() {
+  local date_str="$1"
+  local year month day iso
+  if [[ "$date_str" =~ ^([0-9]{2})/([0-9]{2}) ]]; then
+    month="${BASH_REMATCH[1]}"
+    day="${BASH_REMATCH[2]}"
+    year="$(date "+%Y")"
+    iso="${year}-${month}-${day}T00:00:00"
+    format_rfc822_from_iso "$iso"
+    return
+  fi
+  printf '%s' "$date_str"
+}
 
 xml_escape() {
   # Simple XML escape in bash
@@ -94,6 +121,7 @@ jq -c '.transactions[]' "$INPUT" | while IFS= read -r tx; do
   is_transfer="$(jq -r '.is_transfer // false' <<<"$tx")"
 
   amount_disp="$(money_fmt "${amount:-}")"
+  item_pubdate="$(pubdate_from_mfcf_date "$date_str")"
 
   # title: "01/23(Fri) +¥61,000 Transfer Sample Taro"
   item_title="$(printf "%s %s %s" "$date_str" "$amount_disp" "$content" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')"
@@ -116,6 +144,8 @@ jq -c '.transactions[]' "$INPUT" | while IFS= read -r tx; do
   cat <<RSS_EOF
     <item>
       <title>$(xml_escape "$item_title")</title>
+      <pubDate>$(xml_escape "$item_pubdate")</pubDate>
+      <link>$(xml_escape "$CHANNEL_LINK")</link>
       <guid isPermaLink="false">$(xml_escape "$guid")</guid>
       <description><![CDATA[$desc]]></description>
     </item>
