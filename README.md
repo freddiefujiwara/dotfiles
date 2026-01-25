@@ -19,11 +19,15 @@ Each file in `.bin/` is a command.
 
 - `google-home-speaker-wrapper`: play text on Google Home with `catt` and `gtts-cli`.
 - `google-home-speaker-wrapper-change-voice`: switch `google-home-speaker-wrapper` between `openai.fm.sh` and `gtts-cli`.
+- `mf-liability-to-csv.sh`: convert MoneyForward liability JSON to CSV.
+- `mf-to-csv.sh`: convert MoneyForward account JSON to CSV.
+- `mfcf-to-rss.sh`: convert MoneyForward Cash Flow JSON to RSS.
 - `openai.fm.sh`: create an MP3 from text using the OpenAI speech API.
 - `openai.img.sh`: generate an image using the OpenAI image API.
 - `room.sh`: download Rakuten Room collections and items to JSON files.
 - `switchbot-ac`: send an AC command to SwitchBot.
 - `switchbot-command`: send a basic command to SwitchBot.
+- `switchbot-common`: shared functions for SwitchBot scripts.
 - `switchbot-custom`: send a custom command to SwitchBot.
 - `switchbot-devices`: list SwitchBot devices.
 - `switchbot-status`: get SwitchBot device status.
