@@ -16,6 +16,13 @@ require_cmd() {
 require_cmd jq
 
 INPUT="${1:-/dev/stdin}"
+TMP_INPUT=""
+if [[ "$INPUT" == "/dev/stdin" ]]; then
+  TMP_INPUT="$(mktemp)"
+  trap 'rm -f "$TMP_INPUT"' EXIT
+  cat > "$TMP_INPUT"
+  INPUT="$TMP_INPUT"
+fi
 
 # RSS基本情報（必要なら環境変数で上書き可）
 CHANNEL_TITLE="${CHANNEL_TITLE:-Transactions Feed}"
