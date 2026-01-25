@@ -110,3 +110,24 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"<rss version=\"2.0\">"* ]]
 }
+
+@test "normalizes malformed entity placeholders in titles" {
+  tmp_json="$BATS_TEST_TMPDIR/mfcf-to-rss-malformed.json"
+  cat >"$tmp_json" <<'JSON'
+{
+  "transactions": [
+    {
+      "date": "01/18(日)",
+      "content": "本炭釜 紬<lt;炭漆黒色>gt;",
+      "amount_yen": -416000
+    }
+  ]
+}
+JSON
+
+  run bash "$SCRIPT" "$tmp_json"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"紬&lt;炭漆黒色&gt;"* ]]
+  [[ "$output" != *"<lt;"* ]]
+  [[ "$output" != *"&lt;lt;"* ]]
+}

@@ -74,11 +74,16 @@ pubdate_from_mfcf_date() {
 xml_escape() {
   # Simple XML escape in bash
   local s="$1"
-  s="${s//&/&amp;}"
-  s="${s//</&lt;}"
-  s="${s//>/&gt;}"
-  s="${s//\"/&quot;}"
-  s="${s//\'/&apos;}"
+  # Normalize common malformed entity placeholders.
+  s="${s//&lt;/<}"
+  s="${s//&gt;/>}"
+  s="${s//<lt;/<}"
+  s="${s//>gt;/>}"
+  s="${s//&/\&amp;}"
+  s="${s//</\&lt;}"
+  s="${s//>/\&gt;}"
+  s="${s//\"/\&quot;}"
+  s="${s//\'/\&apos;}"
   printf '%s' "$s"
 }
 
