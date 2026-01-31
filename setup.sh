@@ -4,7 +4,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 dotfiles_dir="${DOTFILES_DIR:-$script_dir}"
 
-mkdir -p "$HOME/.bin" "$HOME/.test" "$HOME/.newsboat" "$HOME/.config"
+mkdir -p "$HOME/.bin" "$HOME/.test" "$HOME/.newsboat" "$HOME/.config" "$HOME/.gemini"
 cp -a "$dotfiles_dir/.bin/." "$HOME/.bin/"
 cp -a "$dotfiles_dir/.test/." "$HOME/.test/"
 cp -a "$dotfiles_dir/.newsboat/." "$HOME/.newsboat/"

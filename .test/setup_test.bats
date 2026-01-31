@@ -21,6 +21,7 @@ setup() {
     "$DOTFILES_DIR/.newsboat" \
     "$DOTFILES_DIR/.config" \
     "$DOTFILES_DIR/.codex" \
+    "$DOTFILES_DIR/.gemini" \
     "$DOTFILES_DIR/vimrc"
 
   echo "stub" > "$DOTFILES_DIR/.bin/example"
@@ -28,6 +29,7 @@ setup() {
   echo "stub" > "$DOTFILES_DIR/.newsboat/example"
   echo "stub" > "$DOTFILES_DIR/.config/example"
   echo "stub" > "$DOTFILES_DIR/.codex/example"
+  echo "stub" > "$DOTFILES_DIR/.gemini/settings.json"
   echo "stub" > "$DOTFILES_DIR/.muttrc"
   echo "stub" > "$DOTFILES_DIR/vimrc/_vimrc"
 
@@ -71,6 +73,7 @@ teardown() {
   [ -d "$HOME/.test" ]
   [ -d "$HOME/.newsboat" ]
   [ -d "$HOME/.config" ]
+  [ -f "$HOME/.gemini/settings.json" ]
   [ -f "$HOME/.muttrc" ]
   [ -d "$DOTFILES_DIR/.vim" ]
   [ -L "$HOME/.vimrc" ]
