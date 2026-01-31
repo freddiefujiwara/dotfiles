@@ -5,6 +5,7 @@
 .newsboat/cache.db.lock
 .codex/skills/
 .agents/
-.gemini/
 .github/skills/
+.gemini/*
+!/.gemini/settings.json
 .agent/
