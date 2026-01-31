@@ -11,6 +11,8 @@ cp -a "$dotfiles_dir/.newsboat/." "$HOME/.newsboat/"
 cp -a "$dotfiles_dir/.config/." "$HOME/.config/"
 cp -a "$dotfiles_dir/.muttrc" "$HOME/"
 cp -a "$dotfiles_dir/.codex/." "$HOME/.codex/"
+cp -a "$dotfiles_dir/.gemini/settings.json" "$HOME/.gemini/"
+
 
 rm -rf "$HOME/.vim"
 rm -f "$HOME/.vimrc"

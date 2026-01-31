@@ -75,6 +75,7 @@ Each file in `.bin/` is a command.
 
 The `setup.sh` command links the files in this repo to your home directory.
 If a file already exists, you may need to back it up first.
+It also copies `.gemini/settings.json` to `$HOME/.gemini/` if it exists in the repository.
 
 ## Update
 

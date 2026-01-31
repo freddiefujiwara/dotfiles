@@ -1,1 +1,16 @@
-{}
+{
+  "security": {
+    "auth": {
+      "selectedType": "gemini-api-key"
+    }
+  },
+  "general": {
+    "vimMode": true,
+    "enablePromptCompletion": true
+  },
+  "ui": {
+    "hideBanner": true,
+    "hideTips": true,
+    "showHomeDirectoryWarning": false
+  }
+}
