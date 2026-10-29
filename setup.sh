@@ -6,6 +6,10 @@ dotfiles_dir="${DOTFILES_DIR:-$script_dir}"
 
 mkdir -p "$HOME/.bin" "$HOME/.test" "$HOME/.newsboat" "$HOME/.config" "$HOME/.gemini"
 cp -a "$dotfiles_dir/.bin/." "$HOME/.bin/"
+# .bin holds executable scripts only. Force the executable bit on the
+# installed copies so a file whose mode was lost (e.g. committed as 100644)
+# does not install as a non-executable "Permission denied" script.
+find "$HOME/.bin" -type f -exec chmod +x {} +
 cp -a "$dotfiles_dir/.test/." "$HOME/.test/"
 cp -a "$dotfiles_dir/.newsboat/." "$HOME/.newsboat/"
 cp -a "$dotfiles_dir/.config/." "$HOME/.config/"

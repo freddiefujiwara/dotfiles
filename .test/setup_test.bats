@@ -65,6 +65,14 @@ teardown() {
   rm -rf "$TEST_DIR"
 }
 
+@test "setup.sh makes installed .bin files executable even if the source is not" {
+  chmod 644 "$DOTFILES_DIR/.bin/example"
+  run bash "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ -x "$HOME/.bin/example" ]
+}
+
 @test "setup.sh installs dotfiles into HOME" {
   run bash "$SCRIPT"
 
