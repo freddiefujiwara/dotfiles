@@ -76,3 +76,17 @@ teardown() {
   grep -q "https://api.switch-bot.com/v1.1/devices/device123/commands" "$WGET_ARGS_FILE"
   grep -q -- '--post-data={"command": "press","parameter": "default","commandType": "command"}' "$WGET_ARGS_FILE"
 }
+
+@test "with device, command and parameter: call API with given parameter" {
+  run "$ROOT/.bin/switchbot-command" -d device123 -c setWindSpeed -p 100
+  [ "$status" -eq 0 ]
+  [[ "$output" == *'"status":"ok"'* ]]
+  grep -q "https://api.switch-bot.com/v1.1/devices/device123/commands" "$WGET_ARGS_FILE"
+  grep -q -- '--post-data={"command": "setWindSpeed","parameter": "100","commandType": "command"}' "$WGET_ARGS_FILE"
+}
+
+@test "with parameter but no command: show usage and exit 1" {
+  run "$ROOT/.bin/switchbot-command" -d device123 -p 100
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Usage"* ]]
+}
