@@ -56,6 +56,7 @@ class Hub:
     def get_lights(self):
         return [
             _Light("Light 3", "Kids' room", True, 100),
+            _Light("Light 4", "Kids' room", True, 90),
             _Light("Down light 02", "Dining room", False, 80),
             _Light("Down light 01", "Dining room", True, 100),
         ]
@@ -104,8 +105,38 @@ teardown() {
 @test "on all: turn on every light" {
   run "$ROOT/.bin/dirigera-command" on all
   [ "$status" -eq 0 ]
-  [ "$(grep -c 'set_light' "$DIRIGERA_CALLS_FILE")" -eq 3 ]
+  [ "$(grep -c 'set_light' "$DIRIGERA_CALLS_FILE")" -eq 4 ]
   grep -q "set_light Light 3 True" "$DIRIGERA_CALLS_FILE"
+}
+
+@test "on group: turn on every light in the group" {
+  run "$ROOT/.bin/dirigera-command" on down
+  [ "$status" -eq 0 ]
+  [ "$(grep -c 'set_light' "$DIRIGERA_CALLS_FILE")" -eq 2 ]
+  grep -q "set_light Down light 01 True" "$DIRIGERA_CALLS_FILE"
+  grep -q "set_light Down light 02 True" "$DIRIGERA_CALLS_FILE"
+}
+
+@test "group key: match is case-insensitive" {
+  run "$ROOT/.bin/dirigera-command" off DOWN
+  [ "$status" -eq 0 ]
+  grep -q "set_light Down light 01 False" "$DIRIGERA_CALLS_FILE"
+  grep -q "set_light Down light 02 False" "$DIRIGERA_CALLS_FILE"
+}
+
+@test "level group: set the level of every light in the group" {
+  run "$ROOT/.bin/dirigera-command" level kids 40
+  [ "$status" -eq 0 ]
+  [ "$(grep -c 'set_light_level' "$DIRIGERA_CALLS_FILE")" -eq 2 ]
+  grep -q "set_light_level Light 3 40" "$DIRIGERA_CALLS_FILE"
+  grep -q "set_light_level Light 4 40" "$DIRIGERA_CALLS_FILE"
+}
+
+@test "group with missing lights: exit 2 and change nothing" {
+  run "$ROOT/.bin/dirigera-command" on dining
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"group 'dining' is missing lights"* ]]
+  ! grep -q "set_light " "$DIRIGERA_CALLS_FILE"
 }
 
 @test "level: set the light level of the named light" {
