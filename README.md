@@ -17,6 +17,7 @@ It is very small and simple.
 
 Each file in `.bin/` is a command.
 
+- `dirigera-command`: operate IKEA DIRIGERA lights (on/off/level, by light name, group, or `all`).
 - `google-home-speaker-wrapper`: play text on Google Home with `catt` and `gtts-cli`.
 - `google-home-speaker-wrapper-change-voice`: switch `google-home-speaker-wrapper` between `openai.fm.sh` and `gtts-cli`.
 - `mf-liability-to-csv.sh`: convert MoneyForward liability JSON to CSV.
@@ -50,6 +51,37 @@ Each file in `.bin/` is a command.
 - `tint2/tint2rc`: tint2 panel settings.
 - `tgpt/config.toml`: tgpt provider setting.
 - `nvim/init.vim`: Neovim settings.
+
+## Before you run `setup.sh`
+
+`setup.sh` copies the files in this repo into `$HOME` and downloads vim-plug with `curl`. That is all it does. The commands in `.bin/` also need tools and credential files that are not in this repo. On a new machine, prepare these first.
+
+### Tools you need on `PATH`
+
+- `bash`, `git`, `curl`: to clone this repo and run `setup.sh`.
+- `jq`: used by the MoneyForward converters, `openai.fm.sh`, `openai.img.sh`, `room.sh`, the SwitchBot commands, and the X RSS scripts.
+- `wget`, `openssl`: used by the SwitchBot commands.
+- `python3`: used by `dirigera-command`.
+- `catt`, `gtts-cli`: used by `google-home-speaker-wrapper` and `youtube-play`. Both come from Python packages (see below).
+- `x`: the x-cli binary, used by `x-switch.sh` and `x-to-rss.sh`.
+- `newsboat`, `mutt`, Vim or Neovim: the apps whose settings this repo installs (`.newsboat/`, `.muttrc`, `vimrc/`). The settings do nothing until the apps exist.
+- `bats`: only for running the tests (`./test.sh`).
+
+### Python packages
+
+Install with `pip` (on my machine they live in the mise Python environment):
+
+- `dirigera`: for `dirigera-command`.
+- `catt` and `gTTS`: for the Google Home commands (`gTTS` provides `gtts-cli`).
+
+### Credential files (not in this repo)
+
+Create these by hand on the new machine. The commands that need them fail without them.
+
+- `~/.switchbot.tk`, `~/.switchbot.sc`: SwitchBot API token and secret. Read by `switchbot-common`, so every `switchbot-*` command needs them.
+- `~/.openai`: OpenAI API key (the file contains only the key). Read by `openai.fm.sh` and `openai.img.sh`.
+- `~/.config/x-cli/`: auth files for the `x` CLI. `x-switch.sh` switches the active file in this directory.
+- `~/.dirigera-token`, `~/.dirigera-ip`: DIRIGERA hub token and hub IP address. Read by `dirigera-command`. Keep the token file at mode 600.
 
 ## Quick start
 
