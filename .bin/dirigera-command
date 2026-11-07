@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""dirigera-command: operate IKEA DIRIGERA lights from the shell.
+
+Usage:
+  dirigera-command list
+  dirigera-command on  <name|all>
+  dirigera-command off <name|all>
+  dirigera-command level <name|all> <1-100>
+
+Config (kept outside this script):
+  ~/.dirigera-token  bearer token (mode 600)
+  ~/.dirigera-ip     hub IP address
+"""
+import os
+import sys
+
+import dirigera
+
+
+def load_hub():
+    with open(os.path.expanduser("~/.dirigera-token")) as f:
+        token = f.read().strip()
+    with open(os.path.expanduser("~/.dirigera-ip")) as f:
+        ip = f.read().strip()
+    return dirigera.Hub(token, ip)
+
+
+def pick(lights, target):
+    if target.lower() == "all":
+        return lights
+    for light in lights:
+        if light.attributes.custom_name.lower() == target.lower():
+            return [light]
+    names = ", ".join(sorted(l.attributes.custom_name for l in lights))
+    print(f"error: no light named '{target}'\navailable: {names}", file=sys.stderr)
+    sys.exit(2)
+
+
+def main(argv):
+    if len(argv) < 2:
+        print(__doc__)
+        return 2
+    cmd = argv[1]
+    hub = load_hub()
+    lights = hub.get_lights()
+    if cmd == "list" and len(argv) == 2:
+        for light in sorted(lights, key=lambda x: (x.room.name, x.attributes.custom_name)):
+            state = "on " if light.attributes.is_on else "off"
+            print(f"{light.attributes.custom_name}\t{light.room.name}\t{state}\t{light.attributes.light_level}")
+        return 0
+    if cmd in ("on", "off") and len(argv) == 3:
+        for light in pick(lights, argv[2]):
+            light.set_light(cmd == "on")
+            print(f"{cmd}: {light.attributes.custom_name}")
+        return 0
+    if cmd == "level" and len(argv) == 4:
+        level = int(argv[3])
+        if not 1 <= level <= 100:
+            print("error: level must be 1-100", file=sys.stderr)
+            return 2
+        for light in pick(lights, argv[2]):
+            light.set_light_level(level)
+            print(f"level {level}: {light.attributes.custom_name}")
+        return 0
+    print(__doc__)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
