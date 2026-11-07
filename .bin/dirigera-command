@@ -3,9 +3,20 @@
 
 Usage:
   dirigera-command list
-  dirigera-command on  <name|all>
-  dirigera-command off <name|all>
-  dirigera-command level <name|all> <1-100>
+  dirigera-command on  <name|group|all>
+  dirigera-command off <name|group|all>
+  dirigera-command level <name|group|all> <1-100>
+
+Groups (fixed sets of lights; keys are matched case-insensitively):
+  dining    Dining 01, Dining 02, Dining 03, Dining 04, Dining 05
+  down      Down light 01, Down light 02
+  kitchen   Kitchen 01, Kitchen 02
+  kids      Light 3, Light 4
+  bathroom  Bathroom 01, Bathroom 02
+  corridor  Corridor 01, Corridor 02
+  downback  Downlight 03
+  washroom  Washroom
+  restroom  Restroom
 
 Config (kept outside this script):
   ~/.dirigera-token  bearer token (mode 600)
@@ -15,6 +26,18 @@ import os
 import sys
 
 import dirigera
+
+GROUPS = {
+    "dining": ["Dining 01", "Dining 02", "Dining 03", "Dining 04", "Dining 05"],
+    "down": ["Down light 01", "Down light 02"],
+    "kitchen": ["Kitchen 01", "Kitchen 02"],
+    "kids": ["Light 3", "Light 4"],
+    "bathroom": ["Bathroom 01", "Bathroom 02"],
+    "corridor": ["Corridor 01", "Corridor 02"],
+    "downback": ["Downlight 03"],
+    "washroom": ["Washroom"],
+    "restroom": ["Restroom"],
+}
 
 
 def load_hub():
@@ -28,11 +51,19 @@ def load_hub():
 def pick(lights, target):
     if target.lower() == "all":
         return lights
-    for light in lights:
-        if light.attributes.custom_name.lower() == target.lower():
-            return [light]
-    names = ", ".join(sorted(l.attributes.custom_name for l in lights))
-    print(f"error: no light named '{target}'\navailable: {names}", file=sys.stderr)
+    by_name = {light.attributes.custom_name.lower(): light for light in lights}
+    key = target.lower()
+    if key in GROUPS:
+        missing = [name for name in GROUPS[key] if name.lower() not in by_name]
+        if missing:
+            print(f"error: group '{key}' is missing lights: {', '.join(missing)}", file=sys.stderr)
+            sys.exit(2)
+        return [by_name[name.lower()] for name in GROUPS[key]]
+    if key in by_name:
+        return [by_name[key]]
+    names = ", ".join(sorted(light.attributes.custom_name for light in lights))
+    groups = ", ".join(sorted(GROUPS))
+    print(f"error: no light named '{target}'\navailable: {names}\ngroups: {groups}", file=sys.stderr)
     sys.exit(2)
 
 
@@ -54,7 +85,11 @@ def main(argv):
             print(f"{cmd}: {light.attributes.custom_name}")
         return 0
     if cmd == "level" and len(argv) == 4:
-        level = int(argv[3])
+        try:
+            level = int(argv[3])
+        except ValueError:
+            print("error: level must be 1-100", file=sys.stderr)
+            return 2
         if not 1 <= level <= 100:
             print("error: level must be 1-100", file=sys.stderr)
             return 2
