@@ -25,6 +25,8 @@ Each file in `.bin/` is a command.
 - `mfcf-to-rss.sh`: convert MoneyForward Cash Flow JSON to RSS.
 - `openai.fm.sh`: create an MP3 from text using the OpenAI speech API.
 - `openai.img.sh`: generate an image using the OpenAI image API.
+- `playwright-mf.sh`: run the MoneyForward scrapers (playwright-mf) and regenerate the asset data and cash-flow feeds.
+- `playwright-mf-watchdog.sh`: check that the daily playwright-mf outputs (live feed, breakdown CSV, and the last 8 monthly archives) are present, fresh, and month-consistent; mail an alert otherwise.
 - `room.sh`: download Rakuten Room collections and items to JSON files.
 - `switchbot-ac`: send an AC command to SwitchBot.
 - `switchbot-command`: send a basic command to SwitchBot.
