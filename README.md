@@ -64,6 +64,7 @@ Each file in `.bin/` is a command.
 - `python3`: used by `dirigera-command`.
 - `catt`, `gtts-cli`: used by `google-home-speaker-wrapper` and `youtube-play`. Both come from Python packages (see below).
 - `x`: the x-cli binary, used by `x-switch.sh` and `x-to-rss.sh`.
+- `node`, `npm`: used by `playwright-mf.sh`, which clones and runs the playwright-mf scrapers. Its failure notifications go through `/usr/sbin/sendmail`.
 - `newsboat`, `mutt`, Vim or Neovim: the apps whose settings this repo installs (`.newsboat/`, `.muttrc`, `vimrc/`). The settings do nothing until the apps exist.
 - `bats`: only for running the tests (`./test.sh`).
 
@@ -82,6 +83,7 @@ Create these by hand on the new machine. The commands that need them fail withou
 - `~/.openai`: OpenAI API key (the file contains only the key). Read by `openai.fm.sh` and `openai.img.sh`.
 - `~/.config/x-cli/`: auth files for the `x` CLI. `x-switch.sh` switches the active file in this directory.
 - `~/.dirigera-token`, `~/.dirigera-ip`: DIRIGERA hub token and hub IP address. Read by `dirigera-command`. Keep the token file at mode 600.
+- `~/.config/playwright-mf/gas-url`: the Google Apps Script web app URL that `playwright-mf.sh` calls at the end of a run. The URL works like a token, so keep the file at mode 600. The same directory holds `auth.json`, the saved MoneyForward session the scrapers use.
 
 ## Quick start
 
