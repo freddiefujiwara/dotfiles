@@ -9,10 +9,10 @@ ITEMS=$(grep -c "<item>" $FEED 2>/dev/null)
 ITEMS=${ITEMS:-0}
 [ "$ITEMS" -ge 1 ] || PROBLEMS="$PROBLEMS feed-has-0-items;"
 [ "$(date -r $CSV +%F 2>/dev/null)" = "$TODAY" ] || PROBLEMS="$PROBLEMS csv-not-updated;"
-# Monthly archives (added 2026-11-10): the last 8 months (current month
-# included) must all exist, be updated today, hold at least one item, and
+# Monthly archives (added 2026-11-10): the last 13 months (current month
+# included; window widened to 13 months on 2026-11-10) must all exist, be updated today, hold at least one item, and
 # contain dates of their own month only.
-for i in 0 1 2 3 4 5 6 7; do
+for i in 0 1 2 3 4 5 6 7 8 9 10 11 12; do
   ym=$(date -d "$i months ago" +%Y%m)
   f=$HOME/gd/API/assets/mfcf.$ym.xml
   if [ ! -f "$f" ]; then
