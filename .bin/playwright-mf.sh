@@ -59,14 +59,14 @@ node cf.js --month "$(date +%Y-%m)" | ~/.bin/mfcf-to-rss.sh > /tmp/mfcf.current.
 cp /tmp/mfcf.current.xml /usr/share/nginx/a.ze.gs/mfcf.xml
 cp /tmp/mfcf.current.xml ~/gd/API/assets/mfcf.$(date +%Y%m).xml
 
-for i in 1 2 3 4 5 6 7; do
+for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
   ym=$(date -d "$i months ago" +%Y%m)
   node cf.js --month "$(date -d "$i months ago" +%Y-%m)" | ~/.bin/mfcf-to-rss.sh > /tmp/"mfcf.$ym.xml"
   mv /tmp/"mfcf.$ym.xml" ~/gd/API/assets/
 done
 
-# 対象ウィンドウ（当月含む過去8か月）より古い月別ファイルは残さない
-cutoff=$(date -d '7 months ago' +%Y%m)
+# 対象ウィンドウ（当月含む13か月）より古い月別ファイルは残さない
+cutoff=$(date -d '12 months ago' +%Y%m)
 for f in ~/gd/API/assets/mfcf.[0-9]*.xml; do
   [ -e "$f" ] || continue
   base=$(basename "$f")

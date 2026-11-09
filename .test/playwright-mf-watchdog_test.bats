@@ -19,3 +19,8 @@ setup() {
   run grep -F '<pubDate>' "$SCRIPT"
   [ "$status" -eq 0 ]
 }
+
+@test "playwright-mf-watchdog.sh checks a 13-month window" {
+  run grep -F 'for i in 0 1 2 3 4 5 6 7 8 9 10 11 12' "$SCRIPT"
+  [ "$status" -eq 0 ]
+}

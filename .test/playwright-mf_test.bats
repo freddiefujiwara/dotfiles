@@ -24,3 +24,13 @@ setup() {
   run grep -F 'node cf.js --month' "$SCRIPT"
   [ "$status" -eq 0 ]
 }
+
+@test "playwright-mf.sh fetches a 13-month window" {
+  run grep -F 'for i in 1 2 3 4 5 6 7 8 9 10 11 12' "$SCRIPT"
+  [ "$status" -eq 0 ]
+}
+
+@test "playwright-mf.sh prunes months older than the 13-month window" {
+  run grep -F "date -d '12 months ago'" "$SCRIPT"
+  [ "$status" -eq 0 ]
+}
