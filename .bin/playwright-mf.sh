@@ -55,13 +55,13 @@ node bs-liability.js | ~/.bin/mf-liability-to-csv.sh ~/gd/API/assets
 
 # 入出金は「対象月を絶対指定」で取る。cf.js が見出しと明細の日付を検証し、
 # 対象月と違う月は異常終了するので、ズレた月がそのまま保存されることはない。
-node cf.js --month "$(date +%Y-%m)" | ~/.bin/mfcf-to-rss.sh > /tmp/mfcf.current.xml
+node cf.js --month "$(date +%Y-%m)" | MFCF_YEAR="$(date +%Y)" ~/.bin/mfcf-to-rss.sh > /tmp/mfcf.current.xml
 cp /tmp/mfcf.current.xml /usr/share/nginx/a.ze.gs/mfcf.xml
 cp /tmp/mfcf.current.xml ~/gd/API/assets/mfcf.$(date +%Y%m).xml
 
 for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
   ym=$(date -d "$i months ago" +%Y%m)
-  node cf.js --month "$(date -d "$i months ago" +%Y-%m)" | ~/.bin/mfcf-to-rss.sh > /tmp/"mfcf.$ym.xml"
+  node cf.js --month "$(date -d "$i months ago" +%Y-%m)" | MFCF_YEAR="$(date -d "$i months ago" +%Y)" ~/.bin/mfcf-to-rss.sh > /tmp/"mfcf.$ym.xml"
   mv /tmp/"mfcf.$ym.xml" ~/gd/API/assets/
 done
 
@@ -82,3 +82,4 @@ rm -rf playwright-mf
 sleep 60
 gas_url=$(cat ~/.config/playwright-mf/gas-url)
 curl -sSL "$gas_url" | jq .
+

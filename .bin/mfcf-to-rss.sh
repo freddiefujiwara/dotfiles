@@ -5,6 +5,11 @@ set -euo pipefail
 # Usage:
 #   ./mfcf-to-rss.sh input.json > feed.xml
 #   cat input.json | ./mfcf-to-rss.sh > feed.xml
+#
+# Env vars:
+#   MFCF_YEAR: year for item pubDates. Transaction dates carry no year
+#              (MM/DD only), so the caller passes the target month's year.
+#              Defaults to the current year.
 
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -63,7 +68,7 @@ pubdate_from_mfcf_date() {
   if [[ "$date_str" =~ ^([0-9]{2})/([0-9]{2}) ]]; then
     month="${BASH_REMATCH[1]}"
     day="${BASH_REMATCH[2]}"
-    year="$(date "+%Y")"
+    year="${MFCF_YEAR:-$(date "+%Y")}"
     iso="${year}-${month}-${day}T00:00:00"
     format_rfc822_from_iso "$iso"
     return
@@ -162,3 +167,4 @@ cat <<'RSS_EOF'
   </channel>
 </rss>
 RSS_EOF
+

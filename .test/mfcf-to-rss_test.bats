@@ -57,6 +57,7 @@ setup() {
 }
 
 @test "item pubDate uses current year with midnight time" {
+  unset MFCF_YEAR
   year="$(date "+%Y")"
   if expected="$(LC_ALL=C TZ=UTC date -u -d "${year}-01-23T00:00:00" "+%a, %d %b %Y %H:%M:%S +0000" 2>/dev/null)"; then
     :
@@ -70,6 +71,23 @@ setup() {
   [ "$status" -eq 0 ]
 
   [[ "$output" == *"<pubDate>${expected}</pubDate>"* ]]
+}
+
+@test "item pubDate uses MFCF_YEAR when set" {
+  # 2025-11-30 was a Sunday, matching the weekday in the date string.
+  tmp_json="$BATS_TEST_TMPDIR/mfcf-to-rss-year.json"
+  cat >"$tmp_json" <<'JSON'
+{
+  "transactions": [
+    { "date": "11/30(日)", "content": "サンプル", "amount_yen": -1000 }
+  ]
+}
+JSON
+
+  MFCF_YEAR=2025 \
+  run bash "$SCRIPT" "$tmp_json"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"<pubDate>Sun, 30 Nov 2025 00:00:00 +0000</pubDate>"* ]]
 }
 
 @test "item link uses moneyforward link" {
@@ -131,3 +149,4 @@ JSON
   [[ "$output" != *"<lt;"* ]]
   [[ "$output" != *"&lt;lt;"* ]]
 }
+
