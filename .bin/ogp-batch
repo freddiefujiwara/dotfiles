@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""ogp-batch - drain the ogp queue and publish fetched OGP data as JSON.
+
+Queue lines (written by the `ogp` trigger) are rotated aside atomically,
+de-duplicated, checked against the cache TTLs, fetched with urllib
+(plain HTTP fetch; a browser User-Agent is enough for the sites this
+serves), parsed for Open Graph tags with html.parser, stored in
+~/.ogp/cache.json and published to a.ze.gs as a plain file that
+Google Apps Script can read without authentication.
+
+Run from cron every 10 minutes. See DESIGN-ze-ogp-batch.md.
+"""
+import fcntl
+import ipaddress
+import json
+import os
+import socket
+import time
+import urllib.error
+import urllib.request
+from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
+from urllib.parse import urljoin, urlsplit
+
+HOME = os.environ.get('OGP_HOME', os.path.expanduser('~/.ogp'))
+QUEUE = os.path.join(HOME, 'queue.tsv')
+CACHE = os.path.join(HOME, 'cache.json')
+LOG = os.path.join(HOME, 'batch.log')
+PUBLISH = os.environ.get(
+    'OGP_PUBLISH_PATH', '/usr/share/nginx/a.ze.gs/ogp-cache.json')
+UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36')
+JST = timezone(timedelta(hours=9))
+OK_TTL = 7 * 86400        # successful entries are refetched after 7 days
+ERR_TTL = 6 * 3600        # failures are retried at most every 6 hours
+KEEP_DAYS = 30            # entries older than this are pruned
+MAX_ENTRIES = 2000
+MAX_PER_RUN = 20
+MAX_BYTES = 262144        # OGP lives in <head>; never read whole pages
+RUN_BUDGET = 480          # seconds; cron runs every 600
+
+
+def public_only(url):
+    """SSRF guard: http(s) only, and every resolved IP must be global."""
+    parts = urlsplit(url)
+    if parts.scheme not in ('http', 'https') or not parts.hostname:
+        return False
+    host = parts.hostname
+    if host == 'localhost' or host.endswith('.ze.gs') or host == 'ze.gs':
+        return False
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except socket.gaierror:
+        return False
+    return bool(infos) and all(
+        ipaddress.ip_address(info[4][0]).is_global for info in infos)
+
+
+class _GuardedRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not public_only(newurl):
+            raise urllib.error.URLError('ssrf_blocked')
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+class OgParser(HTMLParser):
+    """Collect og:*/twitter:* meta values and the <title> text.
+
+    HTMLParser already unescapes attribute values, so an og:image
+    containing '&amp;' comes out with a plain '&'.
+    """
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.meta = {}
+        self.title = ''
+        self._in_title = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'meta':
+            attr = dict(attrs)
+            key = attr.get('property') or attr.get('name') or ''
+            if (key.startswith('og:') or key.startswith('twitter:')) \
+                    and attr.get('content'):
+                self.meta.setdefault(key, attr['content'])
+        elif tag == 'title':
+            self._in_title = True
+
+    def handle_endtag(self, tag):
+        if tag == 'title':
+            self._in_title = False
+
+    def handle_data(self, data):
+        if self._in_title:
+            self.title += data
+
+
+def fetch_ogp(url):
+    """Fetch one page and return its cache entry (status ok/no_ogp/error)."""
+    if not public_only(url):
+        return {'status': 'error', 'error': 'ssrf_blocked'}
+    req = urllib.request.Request(url, headers={
+        'User-Agent': UA, 'Accept': 'text/html', 'Accept-Language': 'ja'})
+    opener = urllib.request.build_opener(_GuardedRedirect)
+    with opener.open(req, timeout=10) as resp:
+        status, final_url = resp.status, resp.geturl()
+        charset = resp.headers.get_content_charset() or 'utf-8'
+        buf = b''
+        while b'</head>' not in buf.lower() and len(buf) < MAX_BYTES:
+            chunk = resp.read(65536)
+            if not chunk:
+                break
+            buf += chunk
+    parser = OgParser()
+    parser.feed(buf.decode(charset, errors='replace'))
+    meta = parser.meta
+    title = meta.get('og:title') or meta.get('twitter:title') \
+        or parser.title.strip() or None
+    image = meta.get('og:image') or meta.get('twitter:image')
+    desc = meta.get('og:description') or meta.get('twitter:description')
+    return {
+        'status': 'ok' if (title or image) else 'no_ogp',
+        'httpStatus': status,
+        'effectiveUrl': final_url,
+        'title': title,
+        'description': (desc or '')[:140] or None,
+        'image': urljoin(final_url, image) if image else None,
+    }
+
+
+def _load_cache():
+    try:
+        with open(CACHE) as f:
+            return json.load(f).get('entries', {})
+    except (OSError, ValueError):
+        return {}
+
+
+def _write_json(path, payload):
+    tmp = path + '.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(payload, f, ensure_ascii=False)
+    os.replace(tmp, path)
+
+
+def main():
+    os.makedirs(HOME, exist_ok=True)
+    lock = open(os.path.join(HOME, 'batch.lock'), 'w')
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return 0  # a previous run is still going; cron will retry
+
+    # Rotate the queue: requests arriving during this run land in a
+    # fresh queue.tsv and are picked up by the next run.
+    proc = os.path.join(HOME, 'queue.processing')
+    if os.path.exists(QUEUE):
+        os.replace(QUEUE, proc)
+        open(QUEUE, 'a').close()
+
+    cache = _load_cache()
+    now = time.time()
+    todo, skipped = [], 0
+    if os.path.exists(proc):
+        seen = set()
+        with open(proc) as f:
+            lines = f.readlines()
+        # Processed lines are dropped regardless of outcome; results
+        # (including failures) live in the cache, and the caller
+        # re-triggers after the error TTL if it still needs the URL.
+        os.remove(proc)
+        for line in lines:
+            parts = line.rstrip('\n').split('\t')
+            if len(parts) != 2:
+                continue
+            url = parts[1].split('#')[0]
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            entry = cache.get(url)
+            if entry:
+                age = now - entry.get('_ts', 0)
+                if entry.get('status') == 'ok' and age < OK_TTL:
+                    skipped += 1
+                    continue
+                if entry.get('status') != 'ok' and age < ERR_TTL:
+                    skipped += 1
+                    continue
+            todo.append(url)
+
+    counts = {'ok': 0, 'error': 0}
+    deadline = now + RUN_BUDGET
+    for url in todo[:MAX_PER_RUN]:
+        if time.time() > deadline:
+            break
+        try:
+            entry = fetch_ogp(url)
+        except urllib.error.HTTPError as ex:
+            entry = {'status': 'error', 'error': f'http_{ex.code}'}
+        except Exception as ex:  # timeouts, DNS, TLS, ssrf mid-redirect...
+            entry = {'status': 'error', 'error': type(ex).__name__}
+        entry['fetchedAt'] = datetime.now(JST).isoformat(timespec='seconds')
+        entry['_ts'] = now
+        cache[url] = entry
+        counts['ok' if entry['status'] == 'ok' else 'error'] += 1
+
+    cache = {u: e for u, e in cache.items()
+             if now - e.get('_ts', 0) < KEEP_DAYS * 86400}
+    if len(cache) > MAX_ENTRIES:
+        cache = dict(sorted(cache.items(),
+                            key=lambda kv: kv[1].get('_ts', 0))[-MAX_ENTRIES:])
+    stamp = datetime.now(JST).isoformat(timespec='seconds')
+    _write_json(CACHE, {'version': 1, 'generatedAt': stamp, 'entries': cache})
+    public = {u: {k: v for k, v in e.items() if not k.startswith('_')}
+              for u, e in cache.items()}
+    _write_json(PUBLISH, {'version': 1, 'generatedAt': stamp,
+                          'entries': public})
+    with open(LOG, 'a') as f:
+        f.write(f'{stamp} queued={len(todo)} fetched_ok={counts["ok"]} '
+                f'fetched_error={counts["error"]} skipped_fresh={skipped} '
+                f'cache={len(cache)}\n')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
