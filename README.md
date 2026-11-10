@@ -23,6 +23,8 @@ Each file in `.bin/` is a command.
 - `mf-liability-to-csv.sh`: convert MoneyForward liability JSON to CSV.
 - `mf-to-csv.sh`: convert MoneyForward account JSON to CSV.
 - `mfcf-to-rss.sh`: convert MoneyForward Cash Flow JSON to RSS.
+- `ogp`: queue a URL for Open Graph fetching by `ogp-batch` (called through `altd` from a web request).
+- `ogp-batch`: fetch the URLs queued by `ogp`, extract Open Graph tags, and publish them as JSON for Google Apps Script.
 - `openai.fm.sh`: create an MP3 from text using the OpenAI speech API.
 - `openai.img.sh`: generate an image using the OpenAI image API.
 - `playwright-mf.sh`: run the MoneyForward scrapers (playwright-mf) and regenerate the asset data and cash-flow feeds.
@@ -63,7 +65,7 @@ Each file in `.bin/` is a command.
 - `bash`, `git`, `curl`: to clone this repo and run `setup.sh`.
 - `jq`: used by the MoneyForward converters, `openai.fm.sh`, `openai.img.sh`, `room.sh`, the SwitchBot commands, and the X RSS scripts.
 - `wget`, `openssl`: used by the SwitchBot commands.
-- `python3`: used by `dirigera-command`.
+- `python3`: used by `dirigera-command` and `ogp-batch`.
 - `catt`, `gtts-cli`: used by `google-home-speaker-wrapper` and `youtube-play`. Both come from Python packages (see below).
 - `x`: the x-cli binary, used by `x-switch.sh` and `x-to-rss.sh`.
 - `node`, `npm`: used by `playwright-mf.sh`, which clones and runs the playwright-mf scrapers. Its failure notifications go through `/usr/sbin/sendmail`.
