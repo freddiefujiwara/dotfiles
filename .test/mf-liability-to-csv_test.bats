@@ -2,8 +2,8 @@
 
 setup() {
   ROOT="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
-  SCRIPT="$ROOT/.bin/ms-liability-to-csv.sh"
-  FIXTURE="$BATS_TEST_DIRNAME/ms-liability-to-csv_test.json"
+  SCRIPT="$ROOT/.bin/mf-liability-to-csv.sh"
+  FIXTURE="$BATS_TEST_DIRNAME/mf-liability-to-csv_test.json"
 
   command -v jq >/dev/null 2>&1 || skip "jq is required"
 
