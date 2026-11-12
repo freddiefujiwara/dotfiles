@@ -50,9 +50,6 @@ Each file in `.bin/` is a command.
 
 ## `.config/` settings
 
-- `openbox/rc.xml`: Openbox window manager settings (theme, keys, desktops).
-- `openbox/autostart`: apps that start with Openbox.
-- `tint2/tint2rc`: tint2 panel settings.
 - `tgpt/config.toml`: tgpt provider setting.
 - `nvim/init.vim`: Neovim settings.
 
