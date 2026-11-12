@@ -1,0 +1,68 @@
+{
+  "timestamp": "2024-08-01T00:00:00Z",
+  "total": {
+    "total_text": "1,234,567円",
+    "total_yen": 1234567
+  },
+  "breakdown": [
+    {
+      "category": "Loans",
+      "amount_text": "1,000,000円",
+      "amount_yen": 1000000,
+      "percentage_text": "81%",
+      "percentage": 81
+    },
+    {
+      "category": "Cards",
+      "amount_text": "234,567円",
+      "amount_yen": 234567,
+      "percentage_text": "19%",
+      "percentage": 19
+    }
+  ],
+  "details": [
+    {
+      "id": "loan-001",
+      "category": "Loans",
+      "tables": [
+        {
+          "headers": [
+            "Name",
+            "Balance",
+            "Rate"
+          ],
+          "items": [
+            {
+              "Name": "Main",
+              "Balance": "1,000,000円",
+              "Rate": "1.2%"
+            },
+            {
+              "Name": "Sub",
+              "Balance": "250,000円",
+              "Rate": "0.8%"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "card-002",
+      "category": "Cards",
+      "tables": [
+        {
+          "items": [
+            {
+              "Issuer": "Visa",
+              "Limit": "100,000円"
+            },
+            {
+              "Issuer": "Master",
+              "Limit": "134,567円"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
