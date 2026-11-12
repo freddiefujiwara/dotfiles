@@ -201,17 +201,6 @@ bar {
         status_command i3status
 }
 
-#######################################################################
-# automatically start i3-config-wizard to offer the user to create a
-# keysym-based config which used their favorite modifier (alt or windows)
-#
-# i3-config-wizard will not launch if there already is a config file
-# in ~/.config/i3/config (or $XDG_CONFIG_HOME/i3/config if set) or
-# ~/.i3/config.
-#
-# Please remove the following exec line:
-#######################################################################
-exec i3-config-wizard
 exec --no-startup-id ibus-daemon -drx
 exec --no-startup-id nm-applet
 bindsym Mod4+Shift+x exec i3lock -c 000000
