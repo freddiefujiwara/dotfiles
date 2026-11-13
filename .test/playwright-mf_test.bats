@@ -20,6 +20,16 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
+@test "playwright-mf.sh reads the account list from the external file" {
+  run grep -F 'config/playwright-mf/accounts' "$SCRIPT"
+  [ "$status" -eq 0 ]
+}
+
+@test "playwright-mf.sh embeds no account names" {
+  run grep -F "node accounts-update.js '" "$SCRIPT"
+  [ "$status" -eq 1 ]
+}
+
 @test "playwright-mf.sh fetches cash flow by absolute --month" {
   run grep -F 'node cf.js --month' "$SCRIPT"
   [ "$status" -eq 0 ]

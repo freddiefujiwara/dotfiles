@@ -23,11 +23,12 @@ EOF
 # 1. .[] で配列を展開
 # 2. select(.tweet != null) でツイート情報があるものに限定
 # 3. 必要な情報を抽出して整形
-jq -r '.[] | select(.tweet != null) | 
+jq -r 'def cdata: gsub("]]>"; "]]]]><![CDATA[>");
+  .[] | select(.tweet != null) | 
   "<item>\n" +
-  "  <title><![CDATA[" + (.actors[0].name // "Unknown") + " (@" + (.actors[0].username // "unknown") + ") - " + .kind + "]]></title>\n" +
+  "  <title><![CDATA[" + ((.actors[0].name // "Unknown") | cdata) + " (@" + (.actors[0].username // "unknown") + ") - " + .kind + "]]></title>\n" +
   "  <link>https://twitter.com/" + .tweet.author.username + "/status/" + .tweet.id + "</link>\n" +
-  "  <description><![CDATA[" + .tweet.text + "]]></description>\n" +
+  "  <description><![CDATA[" + (.tweet.text | cdata) + "]]></description>\n" +
   "  <pubDate>" + .tweet.createdAt + "</pubDate>\n" +
   "  <guid isPermaLink=\"false\">" + .id + "</guid>\n" +
   "</item>"' "$INPUT_FILE"
