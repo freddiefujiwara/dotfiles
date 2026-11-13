@@ -146,6 +146,10 @@ jq -c '.transactions[]' "$INPUT" | while IFS= read -r tx; do
   [[ -n "$memo" ]] && desc_lines+=("memo: $memo")
 
   desc="$(printf "%s\n" "${desc_lines[@]}")"
+  # A field containing "]]>" would break out of the CDATA section below
+  # and inject raw markup into the published feed; split it the standard
+  # way so the text survives as data.
+  desc="$(printf "%s" "$desc" | sed 's/]]>/]]]]><![CDATA[>/g')"
 
   # guid uses content+date+amount (does not need to be perfectly unique)
   guid_src="$(printf "%s|%s|%s" "$date_str" "$content" "${amount:-null}")"

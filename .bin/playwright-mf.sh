@@ -36,17 +36,19 @@ npm i
 npx playwright install chromium  # added 2026-11-06: keep browser binaries in sync
 
 # アカウント更新
-node accounts-update.js 'SBI証券'
-node accounts-update.js '大和証券'
-node accounts-update.js 'マネックス証券'
-node accounts-update.js '楽天証券@freddie'
-node accounts-update.js '楽天証券@aojiru.pudding'
-node accounts-update.js '楽天証券@chipop'
-node accounts-update.js 'イオンカード@chipop'
-node accounts-update.js 'イオンカード@freddie'
-node accounts-update.js '楽天カード@freddie'
-node accounts-update.js '楽天カード@chipop'
-node accounts-update.js 'iPhone PASMO@freddie'
+# 対象口座の一覧（金融機関名と口座ニックネーム）は公開リポジトリに
+# 置かず、GAS URL と同じくサーバー上の設定ファイルから読む。
+# 形式: 1行に1口座（例: 楽天証券@freddie）。空行は無視する。
+ACCOUNTS_FILE="$HOME/.config/playwright-mf/accounts"
+if [ ! -r "$ACCOUNTS_FILE" ]; then
+  echo "accounts file not found: $ACCOUNTS_FILE" >&2
+  exit 1
+fi
+while IFS= read -r account; do
+  if [ -n "$account" ]; then
+    node accounts-update.js "$account"
+  fi
+done < "$ACCOUNTS_FILE"
 
 sleep 60
 

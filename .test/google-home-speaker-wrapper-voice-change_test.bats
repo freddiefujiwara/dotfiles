@@ -17,19 +17,19 @@ teardown() {
 
 assert_openai_enabled() {
   local target="$1"
-  run grep -n '^openai\.fm\.sh \$SPEAK \$TEMP_MP3$' "$target"
+  run grep -n '^openai\.fm\.sh \"\$SPEAK\" \"\$TEMP_MP3\"$' "$target"
   [ "$status" -eq 0 ]
 
-  run grep -n '^#gtts-cli \$SPEAK -l ja -o \$TEMP_MP3$' "$target"
+  run grep -n '^#gtts-cli \"\$SPEAK\" -l ja -o \"\$TEMP_MP3\"$' "$target"
   [ "$status" -eq 0 ]
 }
 
 assert_gtts_enabled() {
   local target="$1"
-  run grep -n '^#openai\.fm\.sh \$SPEAK \$TEMP_MP3$' "$target"
+  run grep -n '^#openai\.fm\.sh \"\$SPEAK\" \"\$TEMP_MP3\"$' "$target"
   [ "$status" -eq 0 ]
 
-  run grep -n '^gtts-cli \$SPEAK -l ja -o \$TEMP_MP3$' "$target"
+  run grep -n '^gtts-cli \"\$SPEAK\" -l ja -o \"\$TEMP_MP3\"$' "$target"
   [ "$status" -eq 0 ]
 }
 

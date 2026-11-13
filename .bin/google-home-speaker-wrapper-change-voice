@@ -11,19 +11,19 @@ if [ ! -f "$TARGET" ]; then
 fi
 
 if [ "$MODE" = "openai" ]; then
-  OPENAI_LINE='openai.fm.sh $SPEAK $TEMP_MP3'
-  GTTS_LINE='#gtts-cli $SPEAK -l ja -o $TEMP_MP3'
+  OPENAI_LINE='openai.fm.sh "$SPEAK" "$TEMP_MP3"'
+  GTTS_LINE='#gtts-cli "$SPEAK" -l ja -o "$TEMP_MP3"'
 else
-  OPENAI_LINE='#openai.fm.sh $SPEAK $TEMP_MP3'
-  GTTS_LINE='gtts-cli $SPEAK -l ja -o $TEMP_MP3'
+  OPENAI_LINE='#openai.fm.sh "$SPEAK" "$TEMP_MP3"'
+  GTTS_LINE='gtts-cli "$SPEAK" -l ja -o "$TEMP_MP3"'
 fi
 
 TMP_FILE="$(mktemp)"
 trap 'rm -f "$TMP_FILE"' EXIT
 
 awk -v openai_line="$OPENAI_LINE" -v gtts_line="$GTTS_LINE" '
-  $0 ~ /^#?openai\.fm\.sh \$SPEAK \$TEMP_MP3$/ { print openai_line; next }
-  $0 ~ /^#?gtts-cli \$SPEAK -l ja -o \$TEMP_MP3$/ { print gtts_line; next }
+  $0 ~ /^#?openai\.fm\.sh \"\$SPEAK\" \"\$TEMP_MP3\"$/ { print openai_line; next }
+  $0 ~ /^#?gtts-cli \"\$SPEAK\" -l ja -o \"\$TEMP_MP3\"$/ { print gtts_line; next }
   { print }
 ' "$TARGET" > "$TMP_FILE"
 

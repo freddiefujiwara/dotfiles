@@ -30,7 +30,7 @@ cleanup() {
   rm -f "$TEMP_MP3"
 }
 trap cleanup EXIT
-#openai.fm.sh $SPEAK $TEMP_MP3
-gtts-cli $SPEAK -l ja -o $TEMP_MP3
+#openai.fm.sh "$SPEAK" "$TEMP_MP3"
+gtts-cli "$SPEAK" -l ja -o "$TEMP_MP3"
 catt -d "$HOST" cast "$TEMP_MP3"
 catt -d "$HOST" status
