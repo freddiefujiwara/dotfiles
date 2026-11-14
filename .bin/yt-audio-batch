@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+"""yt-audio-batch - drain the yt-audio queue and publish audio stream URLs.
+
+Queue lines (written by the `yt-audio` trigger) are rotated aside
+atomically, de-duplicated, checked against cache TTLs, extracted with
+`yt-dlp -g` (URL only, nothing is downloaded), stored in
+~/.yt-audio/cache.json and published to a.ze.gs as a plain JSON file
+that clients can read without authentication.
+
+Run from cron every 10 minutes. Modeled on ogp-batch.
+"""
+import fcntl
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+from urllib.parse import parse_qs, urlparse
+
+HOME_DIR = os.environ.get('YT_AUDIO_HOME', os.path.expanduser('~/.yt-audio'))
+QUEUE = os.path.join(HOME_DIR, 'queue.tsv')
+CACHE = os.path.join(HOME_DIR, 'cache.json')
+LOG = os.path.join(HOME_DIR, 'batch.log')
+LOCK = os.path.join(HOME_DIR, 'batch.lock')
+PUBLISH = os.environ.get('YT_AUDIO_PUBLISH_PATH', '/usr/share/nginx/a.ze.gs/audio-urls.json')
+
+FRESH_TTL = 4 * 3600       # url younger than this is skipped
+ERR_TTL = 6 * 3600         # failures retried at most every 6 hours
+PUBLISH_TTL = 6 * 3600     # only urls younger than this are published
+KEEP_DAYS = 7              # prune by lastQueued
+MAX_ENTRIES = 1000
+MAX_PER_RUN = 20
+RUN_BUDGET = 480           # seconds soft cap (~8 min)
+
+
+def find_ytdlp():
+    p = shutil.which('yt-dlp')
+    if p:
+        return p
+    shim = os.path.expanduser('~/.local/share/mise/shims/yt-dlp')
+    if os.path.isfile(shim) and os.access(shim, os.X_OK):
+        return shim
+    return None
+
+
+def load_cache():
+    try:
+        with open(CACHE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_cache(cache):
+    os.makedirs(HOME_DIR, exist_ok=True)
+    tmp = CACHE + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(cache, f, ensure_ascii=False, separators=(',', ':'))
+    os.replace(tmp, CACHE)
+
+
+def parse_dur(url):
+    """True duration (seconds, float) from a googlevideo URL's dur= param."""
+    if not url:
+        return None
+    try:
+        vals = parse_qs(urlparse(url).query).get('dur')
+        if vals:
+            d = float(vals[0])
+            if d > 0:
+                return d
+    except Exception:
+        pass
+    return None
+
+
+def publish(cache, now):
+    out = {}
+    with_dur = 0
+    for vid, e in cache.items():
+        if not isinstance(e, dict):
+            continue
+        url = e.get('url')
+        ts = e.get('ts')
+        if url and isinstance(ts, (int, float)) and now - ts < PUBLISH_TTL:
+            item = {'url': url, 'ts': ts}
+            dur = e.get('dur')
+            if not isinstance(dur, (int, float)):
+                dur = parse_dur(url)
+            if isinstance(dur, (int, float)):
+                item['dur'] = dur
+                with_dur += 1
+            out[vid] = item
+    d = os.path.dirname(PUBLISH)
+    os.makedirs(d, exist_ok=True)
+    tmp = os.path.join(d, '.audio-urls.json.tmp')
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
+    os.replace(tmp, PUBLISH)
+    return len(out), with_dur
+
+
+def main():
+    os.makedirs(HOME_DIR, exist_ok=True)
+    lock_f = open(LOCK, 'w')
+    try:
+        fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return 0
+    start = time.time()
+    now = int(start)
+    # Rotate queue
+    queued = []
+    processing = QUEUE + '.processing'
+    if os.path.exists(QUEUE):
+        try:
+            os.replace(QUEUE, processing)
+        except FileNotFoundError:
+            processing = None
+    else:
+        processing = None
+    if processing and os.path.exists(processing):
+        try:
+            with open(processing, 'r', encoding='utf-8', errors='replace') as f:
+                for line in f:
+                    parts = line.rstrip('\n').split('\t')
+                    if len(parts) >= 2:
+                        vid = parts[1].strip()
+                    elif parts:
+                        vid = parts[0].strip()
+                    else:
+                        continue
+                    # validate 11-char id
+                    if len(vid) == 11 and all(c.isalnum() or c in '_-' for c in vid):
+                        queued.append(vid)
+        finally:
+            try:
+                os.remove(processing)
+            except FileNotFoundError:
+                pass
+    # Dedupe preserving order
+    seen = set()
+    uniq = []
+    for vid in queued:
+        if vid not in seen:
+            seen.add(vid)
+            uniq.append(vid)
+    cache = load_cache()
+    extracted = 0
+    skipped_fresh = 0
+    skipped_err = 0
+    failed = 0
+    succeeded = 0
+    ytdlp = find_ytdlp()
+    for vid in uniq:
+        entry = cache.get(vid) if isinstance(cache.get(vid), dict) else {}
+        entry = dict(entry) if entry else {}
+        entry['lastQueued'] = now
+        cache[vid] = entry
+        if entry.get('url') and isinstance(entry.get('ts'), (int, float)) and now - entry['ts'] < FRESH_TTL:
+            skipped_fresh += 1
+            continue
+        if isinstance(entry.get('errorTs'), (int, float)) and now - entry['errorTs'] < ERR_TTL:
+            skipped_err += 1
+            continue
+        if extracted >= MAX_PER_RUN:
+            continue
+        if time.time() - start > RUN_BUDGET:
+            break
+        extracted += 1
+        if not ytdlp:
+            entry['error'] = 'yt-dlp_not_found'
+            entry['errorTs'] = int(time.time())
+            failed += 1
+            continue
+        watch = f'https://www.youtube.com/watch?v={vid}'
+        try:
+            result = subprocess.run(
+                [ytdlp, '-g', '-f', 'bestaudio[ext=m4a]', '--no-playlist', '--', watch],
+                capture_output=True, text=True, timeout=60,
+            )
+            out_lines = [ln.strip() for ln in (result.stdout or '').splitlines() if ln.strip()]
+            if result.returncode == 0 and len(out_lines) == 1 and out_lines[0].startswith('https://'):
+                entry['url'] = out_lines[0]
+                entry['ts'] = int(time.time())
+                dur = parse_dur(out_lines[0])
+                if dur is not None:
+                    entry['dur'] = dur
+                else:
+                    entry.pop('dur', None)
+                entry.pop('error', None)
+                entry.pop('errorTs', None)
+                succeeded += 1
+            else:
+                err = (result.stderr or '').strip().splitlines()
+                entry['error'] = (err[-1] if err else f'exit_{result.returncode}')[:500]
+                entry['errorTs'] = int(time.time())
+                failed += 1
+        except Exception as e:
+            entry['error'] = str(e)[:500]
+            entry['errorTs'] = int(time.time())
+            failed += 1
+        cache[vid] = entry
+    # Prune by lastQueued older than 7 days
+    cutoff = now - KEEP_DAYS * 86400
+    for vid in list(cache.keys()):
+        e = cache.get(vid)
+        if isinstance(e, dict):
+            lq = e.get('lastQueued')
+            if isinstance(lq, (int, float)) and lq < cutoff:
+                del cache[vid]
+    # Hard cap 1000, oldest lastQueued first
+    if len(cache) > MAX_ENTRIES:
+        sorted_ids = sorted(cache.keys(), key=lambda k: cache[k].get('lastQueued', 0) if isinstance(cache[k], dict) else 0)
+        for vid in sorted_ids[:len(cache) - MAX_ENTRIES]:
+            del cache[vid]
+    save_cache(cache)
+    published, published_dur = publish(cache, int(time.time()))
+    elapsed = int(time.time() - start)
+    summary = f"{time.strftime('%Y-%m-%dT%H:%M:%S%z', time.localtime())} queued={len(uniq)} extracted={extracted} ok={succeeded} failed={failed} skip_fresh={skipped_fresh} skip_err={skipped_err} published={published} published_dur={published_dur} elapsed={elapsed}s"
+    try:
+        with open(LOG, 'a', encoding='utf-8') as lf:
+            lf.write(summary + '\n')
+    except Exception:
+        pass
+    print(summary)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
