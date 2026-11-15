@@ -11,7 +11,8 @@ Groups (fixed sets of lights; keys are matched case-insensitively):
   dining    Dining 01, Dining 02, Dining 03, Dining 04, Dining 05
   down      Down light 01, Down light 02
   kitchen   Kitchen 01, Kitchen 02
-  kids      Light 3, Light 4
+  kids      Chiemi 01, Chiemi 02, Chiemi 03
+  sink      Sink 01, Sink 02
   bathroom  Bathroom 01, Bathroom 02
   corridor  Corridor 01, Corridor 02
   downback  Downlight 03
@@ -31,7 +32,8 @@ GROUPS = {
     "dining": ["Dining 01", "Dining 02", "Dining 03", "Dining 04", "Dining 05"],
     "down": ["Down light 01", "Down light 02"],
     "kitchen": ["Kitchen 01", "Kitchen 02"],
-    "kids": ["Light 3", "Light 4"],
+    "kids": ["Chiemi 01", "Chiemi 02", "Chiemi 03"],
+    "sink": ["Sink 01", "Sink 02"],
     "bathroom": ["Bathroom 01", "Bathroom 02"],
     "corridor": ["Corridor 01", "Corridor 02"],
     "downback": ["Downlight 03"],

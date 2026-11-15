@@ -55,8 +55,11 @@ class Hub:
 
     def get_lights(self):
         return [
-            _Light("Light 3", "Kids' room", True, 100),
-            _Light("Light 4", "Kids' room", True, 90),
+            _Light("Chiemi 01", "Kids' room", True, 100),
+            _Light("Chiemi 02", "Kids' room", True, 90),
+            _Light("Chiemi 03", "Kids' room", False, 70),
+            _Light("Sink 01", "Washroom", False, 100),
+            _Light("Sink 02", "Washroom", True, 60),
             _Light("Down light 02", "Dining room", False, 80),
             _Light("Down light 01", "Dining room", True, 100),
         ]
@@ -84,7 +87,7 @@ teardown() {
   [[ "${lines[1]}" == *"Down light 02"* ]]
   [[ "${lines[1]}" == *"off"* ]]
   [[ "${lines[1]}" == *"80"* ]]
-  [[ "${lines[2]}" == *"Light 3"* ]]
+  [[ "${lines[2]}" == *"Chiemi 01"* ]]
   [[ "${lines[2]}" == *"Kids' room"* ]]
   grep -q "Hub token=dummy-token ip=192.0.2.1" "$DIRIGERA_CALLS_FILE"
 }
@@ -105,8 +108,9 @@ teardown() {
 @test "on all: turn on every light" {
   run "$ROOT/.bin/dirigera-command" on all
   [ "$status" -eq 0 ]
-  [ "$(grep -c 'set_light' "$DIRIGERA_CALLS_FILE")" -eq 4 ]
-  grep -q "set_light Light 3 True" "$DIRIGERA_CALLS_FILE"
+  [ "$(grep -c 'set_light' "$DIRIGERA_CALLS_FILE")" -eq 7 ]
+  grep -q "set_light Chiemi 01 True" "$DIRIGERA_CALLS_FILE"
+  grep -q "set_light Sink 01 True" "$DIRIGERA_CALLS_FILE"
 }
 
 @test "on group: turn on every light in the group" {
@@ -127,9 +131,18 @@ teardown() {
 @test "level group: set the level of every light in the group" {
   run "$ROOT/.bin/dirigera-command" level kids 40
   [ "$status" -eq 0 ]
-  [ "$(grep -c 'set_light_level' "$DIRIGERA_CALLS_FILE")" -eq 2 ]
-  grep -q "set_light_level Light 3 40" "$DIRIGERA_CALLS_FILE"
-  grep -q "set_light_level Light 4 40" "$DIRIGERA_CALLS_FILE"
+  [ "$(grep -c 'set_light_level' "$DIRIGERA_CALLS_FILE")" -eq 3 ]
+  grep -q "set_light_level Chiemi 01 40" "$DIRIGERA_CALLS_FILE"
+  grep -q "set_light_level Chiemi 02 40" "$DIRIGERA_CALLS_FILE"
+  grep -q "set_light_level Chiemi 03 40" "$DIRIGERA_CALLS_FILE"
+}
+
+@test "on sink group: turn on every light in the group" {
+  run "$ROOT/.bin/dirigera-command" on sink
+  [ "$status" -eq 0 ]
+  [ "$(grep -c 'set_light' "$DIRIGERA_CALLS_FILE")" -eq 2 ]
+  grep -q "set_light Sink 01 True" "$DIRIGERA_CALLS_FILE"
+  grep -q "set_light Sink 02 True" "$DIRIGERA_CALLS_FILE"
 }
 
 @test "group with missing lights: exit 2 and change nothing" {
