@@ -154,6 +154,10 @@ def main():
     failed = 0
     succeeded = 0
     ytdlp = find_ytdlp()
+    # Classify the queue: fresh entries and entries inside the error
+    # backoff window are skipped for this run; everything else is an
+    # extraction candidate.
+    candidates = []
     for vid in uniq:
         entry = cache.get(vid) if isinstance(cache.get(vid), dict) else {}
         entry = dict(entry) if entry else {}
@@ -165,10 +169,22 @@ def main():
         if isinstance(entry.get('errorTs'), (int, float)) and now - entry['errorTs'] < ERR_TTL:
             skipped_err += 1
             continue
+        candidates.append(vid)
+    # Oldest cached URL first; ids that were never extracted (no ts)
+    # go first, so a large queue cannot starve its tail.
+    def candidate_key(vid):
+        ts = cache[vid].get('ts')
+        return ts if isinstance(ts, (int, float)) else 0
+    candidates.sort(key=candidate_key)
+    deferred = []
+    for vid in candidates:
+        entry = cache[vid]
         if extracted >= MAX_PER_RUN:
+            deferred.append(vid)
             continue
         if time.time() - start > RUN_BUDGET:
-            break
+            deferred.append(vid)
+            continue
         extracted += 1
         if not ytdlp:
             entry['error'] = 'yt-dlp_not_found'
@@ -203,6 +219,17 @@ def main():
             entry['errorTs'] = int(time.time())
             failed += 1
         cache[vid] = entry
+    # Requeue whatever this run could not process (per-run cap or
+    # time budget) so the next run picks it up instead of dropping
+    # it. Append mode, same line format as the yt-audio trigger;
+    # duplicates are removed by the dedupe of the next run.
+    if deferred:
+        try:
+            with open(QUEUE, 'a', encoding='utf-8') as qf:
+                for vid in deferred:
+                    qf.write(f"{now}\t{vid}\n")
+        except Exception:
+            pass
     # Prune by lastQueued older than 7 days
     cutoff = now - KEEP_DAYS * 86400
     for vid in list(cache.keys()):
