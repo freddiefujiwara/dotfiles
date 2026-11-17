@@ -44,3 +44,8 @@ setup() {
   run grep -F "date -d '12 months ago'" "$SCRIPT"
   [ "$status" -eq 0 ]
 }
+
+@test "playwright-mf.sh does not publish the feed to the nginx docroot" {
+  run grep -F '/usr/share/nginx' "$SCRIPT"
+  [ "$status" -eq 1 ]
+}

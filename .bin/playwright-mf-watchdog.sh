@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 # playwright-mf watchdog (added 2026-11-06): alert when the daily outputs are missing or stale.
-FEED=/usr/share/nginx/a.ze.gs/mfcf.xml
 CSV=$HOME/gd/API/assets/breakdown.csv
 PROBLEMS=""
 TODAY=$(date +%F)
-[ "$(date -r $FEED +%F 2>/dev/null)" = "$TODAY" ] || PROBLEMS="$PROBLEMS feed-not-updated;"
-ITEMS=$(grep -c "<item>" $FEED 2>/dev/null)
-ITEMS=${ITEMS:-0}
-[ "$ITEMS" -ge 1 ] || PROBLEMS="$PROBLEMS feed-has-0-items;"
 [ "$(date -r $CSV +%F 2>/dev/null)" = "$TODAY" ] || PROBLEMS="$PROBLEMS csv-not-updated;"
 # Monthly archives (added 2026-11-10): the last 13 months (current month
 # included; window widened to 13 months on 2026-11-10) must all exist, be updated today, hold at least one item, and
