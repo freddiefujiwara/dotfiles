@@ -45,6 +45,21 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
+@test "playwright-mf.sh reads the warm cache token from the external file" {
+  run grep -F 'config/playwright-mf/warm-cache-token' "$SCRIPT"
+  [ "$status" -eq 0 ]
+}
+
+@test "playwright-mf.sh pings the warm_cache action" {
+  run grep -F 'action=warm_cache' "$SCRIPT"
+  [ "$status" -eq 0 ]
+}
+
+@test "playwright-mf.sh fails when the ping status is not true" {
+  run grep -F "jq -e '.status == true'" "$SCRIPT"
+  [ "$status" -eq 0 ]
+}
+
 @test "playwright-mf.sh does not publish the feed to the nginx docroot" {
   run grep -F '/usr/share/nginx' "$SCRIPT"
   [ "$status" -eq 1 ]
