@@ -12,6 +12,13 @@ cp -a "$dotfiles_dir/.bin/." "$HOME/.bin/"
 find "$HOME/.bin" -type f -exec chmod +x {} +
 cp -a "$dotfiles_dir/.test/." "$HOME/.test/"
 cp -a "$dotfiles_dir/.newsboat/." "$HOME/.newsboat/"
+# Feed URLs that must not live in this repository (they name
+# home-server hosts) are kept in a local-only fragment. Append it to
+# the installed urls file; the fragment itself is never written here,
+# so it survives every setup run unchanged.
+if [[ -f "$HOME/.newsboat/urls.local" && -f "$HOME/.newsboat/urls" ]]; then
+  cat "$HOME/.newsboat/urls.local" >> "$HOME/.newsboat/urls"
+fi
 cp -a "$dotfiles_dir/.config/." "$HOME/.config/"
 cp -a "$dotfiles_dir/.muttrc" "$HOME/"
 cp -a "$dotfiles_dir/.codex/." "$HOME/.codex/"

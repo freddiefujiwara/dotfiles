@@ -4,8 +4,8 @@
 Queue lines (written by the `yt-audio` trigger) are rotated aside
 atomically, de-duplicated, checked against cache TTLs, extracted with
 `yt-dlp -g` (URL only, nothing is downloaded), stored in
-~/.yt-audio/cache.json and published to a.ze.gs as a plain JSON file
-that clients can read without authentication.
+~/.yt-audio/cache.json and published to the local web root as a plain
+JSON file that clients can read without authentication.
 
 Run from cron every 10 minutes. Modeled on ogp-batch.
 """
@@ -23,7 +23,33 @@ QUEUE = os.path.join(HOME_DIR, 'queue.tsv')
 CACHE = os.path.join(HOME_DIR, 'cache.json')
 LOG = os.path.join(HOME_DIR, 'batch.log')
 LOCK = os.path.join(HOME_DIR, 'batch.lock')
-PUBLISH = os.environ.get('YT_AUDIO_PUBLISH_PATH', '/usr/share/nginx/a.ze.gs/audio-urls.json')
+# The publish path names a home-server host, so it lives in a
+# local-only config file outside this repository (same style as
+# ~/.config/playwright-mf/gas-url). The environment variable wins
+# over the file; there is no built-in default, and main() refuses
+# to run when the value is missing.
+CONF_PATH = os.environ.get(
+    'ZE_GS_HOSTS_CONF', os.path.expanduser('~/.config/ze-gs/hosts.conf'))
+
+
+def _load_local_conf():
+    conf = {}
+    try:
+        with open(CONF_PATH, encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                conf[key.strip()] = value.strip()
+    except OSError:
+        pass
+    return conf
+
+
+_CONF = _load_local_conf()
+PUBLISH = os.environ.get('YT_AUDIO_PUBLISH_PATH') or _CONF.get(
+    'YT_AUDIO_PUBLISH_PATH')
 
 FRESH_TTL = 4 * 3600       # url younger than this is skipped
 ERR_TTL = 6 * 3600         # failures retried at most every 6 hours
@@ -103,6 +129,10 @@ def publish(cache, now):
 
 
 def main():
+    if not PUBLISH:
+        print('yt-audio-batch: local host config missing or incomplete: '
+              f'{CONF_PATH} (need YT_AUDIO_PUBLISH_PATH)', file=sys.stderr)
+        return 1
     os.makedirs(HOME_DIR, exist_ok=True)
     lock_f = open(LOCK, 'w')
     try:
