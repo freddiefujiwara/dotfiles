@@ -60,5 +60,23 @@
       "text": "Tweet from a user with no actor name/username.",
       "createdAt": "2024-01-03T10:00:00Z"
     }
+  },
+  {
+    "id": "notif_5",
+    "kind": "like",
+    "actors": [
+      {
+        "name": "Dave",
+        "username": "dave"
+      }
+    ],
+    "tweet": {
+      "id": "99999",
+      "author": {
+        "username": "testuser"
+      },
+      "text": "Tweet with a Twitter-format date.",
+      "createdAt": "Wed Oct 10 20:19:24 +0000 2018"
+    }
   }
 ]
