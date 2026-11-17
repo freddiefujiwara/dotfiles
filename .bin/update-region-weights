@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+"""MSCI ファクトシートから地域配分の重みを導出し、Drive の
+API/assets/region-weights.csv を更新する（月次ジョブ）。
+
+導出方法（asset 側のシード値と同じ）:
+  us    = ACWI ファクトシートの United States
+  japan = ACWI ファクトシートの Japan
+  先進国比率        = ACWI の Japan ÷ World の Japan × 100
+  emerging        = 100 − 先進国比率
+  developed_other = 先進国比率 − us − japan
+  developed セット = acwi から日本・新興国を取り除いて再正規化
+  emerging セット  = emerging 100 固定
+
+検証を通った場合のみ既存ファイルを上書きする。失敗時はファイルを
+触らず、失敗メールを送って異常終了する（playwright-mf と同じ流儀）。
+"""
+
+import os
+import re
+import subprocess
+import sys
+import urllib.request
+from datetime import datetime
+
+ACWI_URL = "https://www.msci.com/documents/10199/dad48a28-fafb-4e4a-bfff-8ff7ddf9df90"
+WORLD_URL = "https://www.msci.com/documents/10199/255599/msci-world-index-usd-net.pdf"
+OUTPUT = os.environ.get(
+    "REGION_WEIGHTS_OUTPUT",
+    os.path.expanduser("~/gd/API/assets/region-weights.csv"),
+)
+LOG_PATH = os.path.expanduser("~/.region-weights.log")
+UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+)
+BUCKETS = ["japan", "us", "developed_other", "emerging", "other"]
+WEIGHT_SETS = ["acwi", "developed", "emerging"]
+
+
+class Fail(Exception):
+    pass
+
+
+def log(message):
+    line = f"{datetime.now().isoformat(timespec='seconds')} {message}"
+    try:
+        with open(LOG_PATH, "a") as fh:
+            fh.write(line + "\n")
+    except OSError:
+        pass
+    print(line)
+
+
+def fetch_pdf_text(url, local_env):
+    """PDF を取得して全ページのテキストを返す。
+
+    環境変数（テスト・手動実行用）にローカル PDF のパスがあれば、
+    ダウンロードの代わりにそれを読む。
+    """
+    local = os.environ.get(local_env)
+    if local:
+        with open(local, "rb") as fh:
+            data = fh.read()
+    else:
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = resp.read()
+    if not data.startswith(b"%PDF"):
+        raise Fail(f"response is not a PDF (first bytes: {data[:16]!r})")
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        raise Fail("pypdf is not installed (pip install pypdf)")
+    import io
+
+    reader = PdfReader(io.BytesIO(data))
+    return "\n".join((page.extract_text() or "") for page in reader.pages)
+
+
+def parse_factsheet(text):
+    """ファクトシートのテキストから (基準日, 米国%, 日本%) を取り出す。"""
+    m = re.search(r"([A-Z]{3} \d{1,2}, \d{4})\s+Index Factsheet", text)
+    if not m:
+        raise Fail("factsheet date not found")
+    effective = datetime.strptime(m.group(1).title(), "%b %d, %Y").strftime("%Y-%m-%d")
+    idx = text.find("COUNTRY WEIGHTS")
+    if idx < 0:
+        raise Fail("COUNTRY WEIGHTS section not found")
+    window = text[idx : idx + 400]
+    us = re.search(r"United States\s+([\d.]+)%", window)
+    jp = re.search(r"Japan\s+([\d.]+)%", window)
+    if not us or not jp:
+        raise Fail("country weights not found in COUNTRY WEIGHTS section")
+    return effective, float(us.group(1)), float(jp.group(1))
+
+
+def _round2(values):
+    """各値を小数2桁に丸め、合計がちょうど100になるよう最大バケットで調整する。"""
+    rounded = {k: round(v, 2) for k, v in values.items()}
+    residual = round(100.0 - sum(rounded.values()), 2)
+    if residual != 0:
+        largest = max(rounded, key=lambda k: rounded[k])
+        rounded[largest] = round(rounded[largest] + residual, 2)
+    return rounded
+
+
+def derive(acwi_us, acwi_jp, world_jp):
+    """3つの公表値から3つの weight_set を導出する。"""
+    if not (50.0 <= acwi_us <= 80.0):
+        raise Fail(f"ACWI US weight out of sane range: {acwi_us}")
+    if not (3.0 <= acwi_jp <= 8.0):
+        raise Fail(f"ACWI Japan weight out of sane range: {acwi_jp}")
+    if world_jp <= acwi_jp:
+        raise Fail(
+            f"World Japan ({world_jp}) must exceed ACWI Japan ({acwi_jp})"
+        )
+    developed_ratio = acwi_jp / world_jp * 100.0
+    if not (80.0 <= developed_ratio <= 95.0):
+        raise Fail(f"developed ratio out of sane range: {developed_ratio}")
+    emerging = 100.0 - developed_ratio
+    developed_other = developed_ratio - acwi_us - acwi_jp
+    if developed_other < 0:
+        raise Fail(f"developed_other went negative: {developed_other}")
+    acwi = _round2(
+        {
+            "japan": acwi_jp,
+            "us": acwi_us,
+            "developed_other": developed_other,
+            "emerging": emerging,
+            "other": 0.0,
+        }
+    )
+    dev_base = acwi_us + developed_other
+    developed = _round2(
+        {
+            "japan": 0.0,
+            "us": acwi_us / dev_base * 100.0,
+            "developed_other": developed_other / dev_base * 100.0,
+            "emerging": 0.0,
+            "other": 0.0,
+        }
+    )
+    emerging_set = _round2(
+        {
+            "japan": 0.0,
+            "us": 0.0,
+            "developed_other": 0.0,
+            "emerging": 100.0,
+            "other": 0.0,
+        }
+    )
+    return {"acwi": acwi, "developed": developed, "emerging": emerging_set}
+
+
+def fmt(value):
+    """シード値の表記に合わせ、末尾の 0 を落として整形する（19.10 → 19.1）。"""
+    s = f"{value:.2f}".rstrip("0").rstrip(".")
+    return s if s else "0"
+
+
+def build_csv(sets, effective_date):
+    lines = ["weight_set,bucket,weight,effective_date"]
+    for name in WEIGHT_SETS:
+        for bucket in BUCKETS:
+            lines.append(f"{name},{bucket},{fmt(sets[name][bucket])},{effective_date}")
+    return "\n".join(lines) + "\n"
+
+
+def current_effective_date(path):
+    try:
+        with open(path) as fh:
+            for line in fh:
+                parts = line.strip().split(",")
+                if len(parts) == 4 and parts[0] != "weight_set":
+                    return parts[3]
+    except OSError:
+        return None
+    return None
+
+
+def send_failure_mail(message):
+    body = (
+        "From: fumikazu@ze.gs\n"
+        "To: fumikazu\n"
+        "Subject: [ze] update-region-weights failed\n"
+        "\n"
+        f"region-weights の更新に失敗しました。既存ファイルは上書きしていません。\n\n{message}\n"
+    )
+    try:
+        subprocess.run(
+            ["/usr/sbin/sendmail", "fumikazu"],
+            input=body.encode(),
+            timeout=30,
+            check=False,
+        )
+    except Exception:
+        pass
+
+
+def main():
+    try:
+        acwi_text = fetch_pdf_text(ACWI_URL, "REGION_WEIGHTS_ACWI_PDF")
+        world_text = fetch_pdf_text(WORLD_URL, "REGION_WEIGHTS_WORLD_PDF")
+        a_date, a_us, a_jp = parse_factsheet(acwi_text)
+        w_date, _w_us, w_jp = parse_factsheet(world_text)
+        if a_date != w_date:
+            raise Fail(f"factsheet dates differ: ACWI={a_date} World={w_date}")
+        existing = current_effective_date(OUTPUT)
+        if existing and a_date < existing:
+            raise Fail(
+                f"new effective_date {a_date} is older than current file {existing}"
+            )
+        sets = derive(a_us, a_jp, w_jp)
+        csv = build_csv(sets, a_date)
+        tmp = OUTPUT + ".tmp"
+        with open(tmp, "w") as fh:
+            fh.write(csv)
+        os.replace(tmp, OUTPUT)
+        log(
+            f"updated {OUTPUT} effective_date={a_date} "
+            f"acwi(us={fmt(sets['acwi']['us'])}, japan={fmt(sets['acwi']['japan'])}, "
+            f"developed_other={fmt(sets['acwi']['developed_other'])}, "
+            f"emerging={fmt(sets['acwi']['emerging'])})"
+        )
+        return 0
+    except Exception as exc:  # noqa: BLE001 - 失敗はすべてメールで知らせる
+        log(f"FAILED: {exc}")
+        send_failure_mail(str(exc))
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
