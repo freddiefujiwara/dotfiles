@@ -5,8 +5,8 @@ Queue lines (written by the `ogp` trigger) are rotated aside atomically,
 de-duplicated, checked against the cache TTLs, fetched with urllib
 (plain HTTP fetch; a browser User-Agent is enough for the sites this
 serves), parsed for Open Graph tags with html.parser, stored in
-~/.ogp/cache.json and published to a.ze.gs as a plain file that
-Google Apps Script can read without authentication.
+~/.ogp/cache.json and published to the local web root as a plain file
+that Google Apps Script can read without authentication.
 
 Run from cron every 10 minutes. See DESIGN-ze-ogp-batch.md.
 """
@@ -15,6 +15,7 @@ import ipaddress
 import json
 import os
 import socket
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -26,8 +27,34 @@ HOME = os.environ.get('OGP_HOME', os.path.expanduser('~/.ogp'))
 QUEUE = os.path.join(HOME, 'queue.tsv')
 CACHE = os.path.join(HOME, 'cache.json')
 LOG = os.path.join(HOME, 'batch.log')
-PUBLISH = os.environ.get(
-    'OGP_PUBLISH_PATH', '/usr/share/nginx/a.ze.gs/ogp-cache.json')
+
+# Home-server host values (publish path, local domain for the SSRF
+# guard) live in a local-only config file outside this repository,
+# in the same style as ~/.config/playwright-mf/gas-url. Environment
+# variables win over the file; there are no built-in defaults, and
+# main() refuses to run when the values are missing.
+CONF_PATH = os.environ.get(
+    'ZE_GS_HOSTS_CONF', os.path.expanduser('~/.config/ze-gs/hosts.conf'))
+
+
+def _load_local_conf():
+    conf = {}
+    try:
+        with open(CONF_PATH) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                conf[key.strip()] = value.strip()
+    except OSError:
+        pass
+    return conf
+
+
+_CONF = _load_local_conf()
+PUBLISH = os.environ.get('OGP_PUBLISH_PATH') or _CONF.get('OGP_PUBLISH_PATH')
+LOCAL_DOMAIN = _CONF.get('LOCAL_DOMAIN', '')
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36')
 JST = timezone(timedelta(hours=9))
@@ -46,7 +73,10 @@ def public_only(url):
     if parts.scheme not in ('http', 'https') or not parts.hostname:
         return False
     host = parts.hostname
-    if host == 'localhost' or host.endswith('.ze.gs') or host == 'ze.gs':
+    if host == 'localhost':
+        return False
+    if LOCAL_DOMAIN and (host == LOCAL_DOMAIN
+                         or host.endswith('.' + LOCAL_DOMAIN)):
         return False
     try:
         infos = socket.getaddrinfo(host, None)
@@ -144,6 +174,11 @@ def _write_json(path, payload):
 
 
 def main():
+    if not PUBLISH or not LOCAL_DOMAIN:
+        print('ogp-batch: local host config missing or incomplete: '
+              f'{CONF_PATH} (need OGP_PUBLISH_PATH and LOCAL_DOMAIN)',
+              file=sys.stderr)
+        return 1
     os.makedirs(HOME, exist_ok=True)
     lock = open(os.path.join(HOME, 'batch.lock'), 'w')
     try:

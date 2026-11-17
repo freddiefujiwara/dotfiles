@@ -6,6 +6,8 @@
 setup() {
   export OGP_HOME="$BATS_TEST_TMPDIR/ogp-home"
   export OGP_PUBLISH_PATH="$BATS_TEST_TMPDIR/published/ogp-cache.json"
+  export ZE_GS_HOSTS_CONF="$BATS_TEST_TMPDIR/hosts.conf"
+  printf 'LOCAL_DOMAIN=private.test\n' > "$ZE_GS_HOSTS_CONF"
   mkdir -p "$OGP_HOME" "$(dirname "$OGP_PUBLISH_PATH")"
   BATCH="$(dirname "$BATS_TEST_FILENAME")/../.bin/ogp-batch"
 }
@@ -99,9 +101,16 @@ import importlib.machinery, sys
 mod = importlib.machinery.SourceFileLoader("ogpb", sys.argv[1]).load_module()
 assert mod.public_only("http://127.0.0.1/x") is False
 assert mod.public_only("http://localhost/x") is False
-assert mod.public_only("https://something.ze.gs/x") is False
+assert mod.public_only("https://something.private.test/x") is False
+assert mod.public_only("https://private.test/x") is False
 assert mod.public_only("ftp://93.184.216.34/x") is False
 assert mod.public_only("http://93.184.216.34/x") is True
 PY
   [ "$status" -eq 0 ]
+}
+
+@test "missing local host config is a clear error, not a silent default" {
+  run env -u OGP_PUBLISH_PATH ZE_GS_HOSTS_CONF="$BATS_TEST_TMPDIR/no-such.conf" "$BATCH"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"local host config missing or incomplete"* ]]
 }

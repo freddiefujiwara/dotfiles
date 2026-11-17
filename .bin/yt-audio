@@ -1,6 +1,6 @@
 #!/bin/sh
 # yt-audio - queue a YouTube video ID for async audio URL extraction.
-# Called by altd: GET https://a.ze.gs/yt-audio/<videoId>
+# Called by altd via the home API: GET /yt-audio/<videoId>
 # Extraction itself is done by yt-audio-batch (cron, ogp-shaped).
 set -eu
 id=${1:-}

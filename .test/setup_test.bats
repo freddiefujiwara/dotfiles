@@ -73,6 +73,19 @@ teardown() {
   [ -x "$HOME/.bin/example" ]
 }
 
+@test "setup.sh appends the local newsboat fragment and leaves it untouched" {
+  printf 'https://example.com/feed\n' > "$DOTFILES_DIR/.newsboat/urls"
+  mkdir -p "$HOME/.newsboat"
+  printf 'https://home.example/feed\n' > "$HOME/.newsboat/urls.local"
+
+  run bash "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  grep -qx 'https://example.com/feed' "$HOME/.newsboat/urls"
+  grep -qx 'https://home.example/feed' "$HOME/.newsboat/urls"
+  [ "$(cat "$HOME/.newsboat/urls.local")" = 'https://home.example/feed' ]
+}
+
 @test "setup.sh installs dotfiles into HOME" {
   run bash "$SCRIPT"
 

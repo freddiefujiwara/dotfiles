@@ -1,7 +1,7 @@
 #!/bin/sh
 # ogp - queue a URL for batch OGP fetching (the fetch itself is ogp-batch).
 #
-# Called by altd: GET https://a.ze.gs/ogp/<encodeURIComponent(url)>
+# Called by altd via the home API: GET /ogp/<encodeURIComponent(url)>
 # altd splits the request path on '/' first and decodeURIComponent's each
 # segment, so the URL arrives as exactly one argument ($1), however many
 # '?' or '&' it contains. Deliberately append-only and near-instant;
