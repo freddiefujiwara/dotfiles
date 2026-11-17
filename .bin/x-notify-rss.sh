@@ -23,14 +23,17 @@ EOF
 # 1. .[] で配列を展開
 # 2. select(.tweet != null) でツイート情報があるものに限定
 # 3. 必要な情報を抽出して整形
+# guid は X の entryId（再発行で変わる）を使わず、種別・行為者・ツイートIDから組み立てる
+# pubDate はツイートの createdAt（Twitter形式）を RFC 822 形式へ変換する（x-to-rss.sh と同等、UTC表記）
 jq -r 'def cdata: gsub("]]>"; "]]]]><![CDATA[>");
+  def rfc822: . as $s | try (strptime("%a %b %d %H:%M:%S %z %Y") | strftime("%a, %d %b %Y %H:%M:%S +0000")) catch $s;
   .[] | select(.tweet != null) | 
   "<item>\n" +
   "  <title><![CDATA[" + ((.actors[0].name // "Unknown") | cdata) + " (@" + (.actors[0].username // "unknown") + ") - " + .kind + "]]></title>\n" +
   "  <link>https://twitter.com/" + .tweet.author.username + "/status/" + .tweet.id + "</link>\n" +
   "  <description><![CDATA[" + (.tweet.text | cdata) + "]]></description>\n" +
-  "  <pubDate>" + .tweet.createdAt + "</pubDate>\n" +
-  "  <guid isPermaLink=\"false\">" + .id + "</guid>\n" +
+  "  <pubDate>" + (.tweet.createdAt | rfc822) + "</pubDate>\n" +
+  "  <guid isPermaLink=\"false\">" + "x-notify-" + (.kind // "unknown") + "-" + (.actors[0].username // "unknown") + "-" + .tweet.id + "</guid>\n" +
   "</item>"' "$INPUT_FILE"
 
 # XMLのフッターを閉じる
