@@ -2,6 +2,7 @@
   {
     "id": "notif_1",
     "kind": "like",
+    "message": "Alice liked your post",
     "actors": [
       {
         "name": "Alice",
@@ -77,6 +78,29 @@
       },
       "text": "Tweet with a Twitter-format date.",
       "createdAt": "Wed Oct 10 20:19:24 +0000 2018"
+    }
+  },
+  {
+    "id": "notif_6",
+    "kind": "reply",
+    "message": "Erin and Frank replied to your post",
+    "actors": [
+      {
+        "name": "Erin",
+        "username": "erin"
+      },
+      {
+        "name": "Frank",
+        "username": "frank"
+      }
+    ],
+    "tweet": {
+      "id": "55555",
+      "author": {
+        "username": "testuser"
+      },
+      "text": "A reply target tweet.",
+      "createdAt": "2024-01-04T09:15:00Z"
     }
   }
 ]

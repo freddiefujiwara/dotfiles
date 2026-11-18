@@ -28,7 +28,7 @@ setup() {
   run bash "$SCRIPT" "$FIXTURE"
   [ "$status" -eq 0 ]
   [[ "$output" == *'<?xml version="1.0" encoding="UTF-8" ?>'* ]]
-  [[ "$output" == *'<rss version="2.0">'* ]]
+  [[ "$output" == *'<rss version="2.0" xmlns:xn="https://freddiefujiwara.com/ns/x-notify">'* ]]
   [[ "$output" == *'<channel>'* ]]
   [[ "$output" == *'</channel>'* ]]
   [[ "$output" == *'</rss>'* ]]
@@ -85,8 +85,29 @@ setup() {
   [[ "$output" != *"does not match format"* ]]
 }
 
+@test "items carry the xn extension elements" {
+  run bash "$SCRIPT" "$FIXTURE"
+  [ "$status" -eq 0 ]
+
+  # Test Case 1: kind / actor / tweet-id / message for a standard notification
+  [[ "$output" == *"<xn:kind>like</xn:kind>"* ]]
+  [[ "$output" == *"<xn:actor username=\"alice\">Alice</xn:actor>"* ]]
+  [[ "$output" == *"<xn:tweet-id>12345</xn:tweet-id>"* ]]
+  [[ "$output" == *"<xn:message>Alice liked your post</xn:message>"* ]]
+
+  # Test Case 6: every actor is repeated as its own element
+  [[ "$output" == *"<xn:kind>reply</xn:kind>"* ]]
+  [[ "$output" == *"<xn:actor username=\"erin\">Erin</xn:actor>"* ]]
+  [[ "$output" == *"<xn:actor username=\"frank\">Frank</xn:actor>"* ]]
+  [[ "$output" == *"<xn:tweet-id>55555</xn:tweet-id>"* ]]
+  [[ "$output" == *"<xn:message>Erin and Frank replied to your post</xn:message>"* ]]
+
+  # Test Case 4: missing actor info falls back like the legacy elements
+  [[ "$output" == *"<xn:actor username=\"unknown\">Unknown</xn:actor>"* ]]
+}
+
 @test "works when reading JSON from stdin" {
   run bash -c "cat '$FIXTURE' | bash '$SCRIPT' /dev/stdin"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"<rss version=\"2.0\">"* ]]
+  [[ "$output" == *"<rss version=\"2.0\" xmlns:xn=\"https://freddiefujiwara.com/ns/x-notify\">"* ]]
 }
