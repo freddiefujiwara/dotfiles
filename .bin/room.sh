@@ -33,8 +33,10 @@ run_process() {
   # Go to the working folder
   cd "$WORK_DIR"
 
-  # Delete old JSON files to start fresh
-  rm -f ./*.json
+  # Delete the previous run's own JSON files to start fresh.
+  # Only this script's files: a blanket *.json delete also removes
+  # other publishers' files in the same folder (e.g. stats JSON).
+  rm -f ./collections.json ./collects_*.json
 
   # Step 1: Download the list of collections
   curl -s "${BASE_URL}/${USER_ID}/collections" -o collections.json

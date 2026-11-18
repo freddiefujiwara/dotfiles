@@ -82,6 +82,24 @@ EOF
   [[ ! "${output}" =~ "Collect ID:" ]]
 }
 
+@test "Function: Cleanup removes only its own JSON files" {
+  echo '{"stale": true}' > "$TEST_DIR/collections.json"
+  echo '{"stale": true}' > "$TEST_DIR/collects_999.json"
+  echo '{"ok": true}' > "$TEST_DIR/x.freddie.stats.json"
+  run run_process
+  [ "$status" -eq 0 ]
+  # Another publisher's file in the same folder must survive
+  [ -f "$TEST_DIR/x.freddie.stats.json" ]
+  # The previous run's own files are cleaned up / regenerated
+  [ ! -f "$TEST_DIR/collects_999.json" ]
+  [ -f "$TEST_DIR/collections.json" ]
+}
+
+@test "Script: cleanup does not glob-delete all JSON files" {
+  run grep -F 'rm -f ./*.json' "$ROOT/.bin/room.sh"
+  [ "$status" -eq 1 ]
+}
+
 @test "Script: Run directly (Fill the last 5% coverage)" {
   # This runs the script as a separate process
   # Because we changed PATH, it still uses our fake curl
