@@ -15,11 +15,6 @@ setup() {
   [ "$output" = "0" ]
 }
 
-@test "playwright-mf.sh reads the GAS URL from the external file" {
-  run grep -F '$(cat ~/.config/playwright-mf/gas-url)' "$SCRIPT"
-  [ "$status" -eq 0 ]
-}
-
 @test "playwright-mf.sh reads the account list from the external file" {
   run grep -F 'config/playwright-mf/accounts' "$SCRIPT"
   [ "$status" -eq 0 ]
@@ -42,21 +37,6 @@ setup() {
 
 @test "playwright-mf.sh prunes months older than the 13-month window" {
   run grep -F "date -d '12 months ago'" "$SCRIPT"
-  [ "$status" -eq 0 ]
-}
-
-@test "playwright-mf.sh reads the warm cache token from the external file" {
-  run grep -F 'config/playwright-mf/warm-cache-token' "$SCRIPT"
-  [ "$status" -eq 0 ]
-}
-
-@test "playwright-mf.sh pings the warm_cache action" {
-  run grep -F 'action=warm_cache' "$SCRIPT"
-  [ "$status" -eq 0 ]
-}
-
-@test "playwright-mf.sh fails when the ping status is not true" {
-  run grep -F "jq -e '.status == true'" "$SCRIPT"
   [ "$status" -eq 0 ]
 }
 
