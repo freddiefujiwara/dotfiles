@@ -79,22 +79,3 @@ for f in ~/gd/API/assets/mfcf.[0-9]*.xml; do
 done
 
 rm -rf playwright-mf
-
-sleep 60
-
-# キャッシュ温め ping 用トークンは、GAS URL と同じくサーバー上の
-# 設定ファイルから読む（asset-gas の WARM_CACHE_TOKEN と照合される）。
-WARM_CACHE_TOKEN_FILE="$HOME/.config/playwright-mf/warm-cache-token"
-if [ ! -r "$WARM_CACHE_TOKEN_FILE" ]; then
-  echo "warm cache token file not found: $WARM_CACHE_TOKEN_FILE" >&2
-  exit 1
-fi
-gas_url=$(cat ~/.config/playwright-mf/gas-url)
-warm_cache_token=$(cat "$WARM_CACHE_TOKEN_FILE")
-# preCacheAll は認証の内側へ移ったため、トークン認証付きの warm_cache
-# 専用口を叩く。応答の status が true でなければ異常終了させ、失敗
-# メールで気付けるようにする（401 が5日間無言だった教訓）。
-ping_result=$(curl -sSL "${gas_url}?action=warm_cache&token=${warm_cache_token}")
-echo "$ping_result" | jq .
-echo "$ping_result" | jq -e '.status == true' > /dev/null
-
