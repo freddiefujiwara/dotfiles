@@ -1,0 +1,75 @@
+{
+  "timestamp": "2024-07-30T12:00:00Z",
+  "breakdown": [
+    {
+      "category": "Stocks",
+      "amount_text": "1,250,000円",
+      "amount_yen": 1250000,
+      "percentage_text": "50.0%",
+      "percentage": 50.0
+    },
+    {
+      "category": "Bonds",
+      "amount_text": "750,000円",
+      "amount_yen": 750000,
+      "percentage_text": "30.0%",
+      "percentage": 30.0
+    },
+    {
+      "category": "Cash",
+      "amount_text": "500,000円",
+      "amount_yen": 500000,
+      "percentage_text": "20.0%",
+      "percentage": 20.0
+    }
+  ],
+  "assetClassRatio": [
+    {
+      "name": "Domestic Equity",
+      "y": 60.0,
+      "color": "#7cb5ec"
+    },
+    {
+      "name": "Foreign Equity",
+      "y": 25.0,
+      "color": "#434348"
+    },
+    {
+      "name": "Cash",
+      "y": 15.0,
+      "color": "#90ed7d"
+    }
+  ],
+  "details": [
+    {
+      "id": "stock-001",
+      "category": "Equities",
+      "tables": [
+        {
+          "headers": ["Ticker", "Name", "Quantity", "Price"],
+          "items": [
+            { "Ticker": "AAPL", "Name": "Apple Inc.", "Quantity": "100", "Price": "150.00" },
+            { "Ticker": "GOOGL", "Name": "Alphabet Inc.", "Quantity": "50", "Price": "2,800.00" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "real-estate-002",
+      "category": "Real Estate",
+      "tables": [
+        {
+          "headers": ["Property", "Value", "Notes"],
+          "items": [
+            { "Property": "Main St Office", "Value": "5,000,000円", "Notes": "Rented" }
+          ]
+        },
+        {
+          "items": [
+            { "Asset": "Land", "Value": "1,000,000円" }
+          ]
+        }
+      ]
+    }
+  ]
+}

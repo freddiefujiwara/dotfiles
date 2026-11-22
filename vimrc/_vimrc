@@ -1,0 +1,7 @@
+source ~/.dotfiles/vimrc/basic
+source ~/.dotfiles/vimrc/plug
+source ~/.dotfiles/vimrc/vimfiler
+source ~/.dotfiles/vimrc/scala
+source ~/.dotfiles/vimrc/gocode
+source ~/.dotfiles/vimrc/airline
+source ~/.dotfiles/vimrc/floaterm

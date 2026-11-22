@@ -1,0 +1,13 @@
+#!/bin/sh
+# yt-audio - queue a YouTube video ID for async audio URL extraction.
+# Called by altd via the home API: GET /yt-audio/<videoId>
+# Extraction itself is done by yt-audio-batch (cron, ogp-shaped).
+set -eu
+id=${1:-}
+case "$id" in
+  *[!A-Za-z0-9_-]*|'') exit 1 ;;
+esac
+[ "${#id}" -eq 11 ] || exit 1
+dir="${YT_AUDIO_HOME:-$HOME/.yt-audio}"
+mkdir -p "$dir"
+printf '%s\t%s\n' "$(date +%s)" "$id" >> "$dir/queue.tsv"

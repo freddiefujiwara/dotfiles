@@ -1,0 +1,413 @@
+#!/usr/bin/env python3
+"""yt-audio-batch - drain the yt-audio queue and publish audio stream URLs.
+
+Queue lines (written by the `yt-audio` trigger) are rotated aside
+atomically, de-duplicated, checked against cache TTLs, extracted with
+`yt-dlp -g` (URL only, nothing is downloaded), stored in
+~/.yt-audio/cache.json and published to the local web root as a plain
+JSON file that clients can read without authentication.
+
+A freshly extracted URL is probed before it is cached: a URL that
+only answers a prefix of the file (seen on just-published videos)
+would otherwise stay cached for the whole FRESH_TTL while the video
+is unplayable downstream. A URL whose tail is refused is requeued
+for the next run instead of being stored.
+
+Run from cron every 10 minutes. Modeled on ogp-batch.
+"""
+import fcntl
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from urllib.parse import parse_qs, urljoin, urlparse
+
+HOME_DIR = os.environ.get('YT_AUDIO_HOME', os.path.expanduser('~/.yt-audio'))
+QUEUE = os.path.join(HOME_DIR, 'queue.tsv')
+CACHE = os.path.join(HOME_DIR, 'cache.json')
+LOG = os.path.join(HOME_DIR, 'batch.log')
+LOCK = os.path.join(HOME_DIR, 'batch.lock')
+# The publish path names a home-server host, so it lives in a
+# local-only config file outside this repository (same style as
+# ~/.config/playwright-mf/gas-url). The environment variable wins
+# over the file; there is no built-in default, and main() refuses
+# to run when the value is missing.
+CONF_PATH = os.environ.get(
+    'ZE_GS_HOSTS_CONF', os.path.expanduser('~/.config/ze-gs/hosts.conf'))
+
+
+def _load_local_conf():
+    conf = {}
+    try:
+        with open(CONF_PATH, encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                conf[key.strip()] = value.strip()
+    except OSError:
+        pass
+    return conf
+
+
+_CONF = _load_local_conf()
+PUBLISH = os.environ.get('YT_AUDIO_PUBLISH_PATH') or _CONF.get(
+    'YT_AUDIO_PUBLISH_PATH')
+
+FRESH_TTL = 4 * 3600       # url younger than this is skipped
+ERR_TTL = 6 * 3600         # failures retried at most every 6 hours
+PUBLISH_TTL = 6 * 3600     # only urls younger than this are published
+KEEP_DAYS = 7              # prune by lastQueued
+MAX_ENTRIES = 1000
+MAX_PER_RUN = 100
+RUN_BUDGET = 480           # seconds soft cap (~8 min)
+# Consecutive tail-verification failures requeued for the very next
+# run before the entry falls back to the normal ERR_TTL backoff.
+# At the 10-minute cron interval 6 retries cover about an hour,
+# which spans the provisioning window observed for new uploads.
+VERIFY_MAX_REQUEUE = 6
+
+
+def find_ytdlp():
+    p = shutil.which('yt-dlp')
+    if p:
+        return p
+    shim = os.path.expanduser('~/.local/share/mise/shims/yt-dlp')
+    if os.path.isfile(shim) and os.access(shim, os.X_OK):
+        return shim
+    return None
+
+
+def load_cache():
+    try:
+        with open(CACHE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_cache(cache):
+    os.makedirs(HOME_DIR, exist_ok=True)
+    tmp = CACHE + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(cache, f, ensure_ascii=False, separators=(',', ':'))
+    os.replace(tmp, CACHE)
+
+
+def parse_dur(url):
+    """True duration (seconds, float) from a googlevideo URL's dur= param."""
+    if not url:
+        return None
+    try:
+        vals = parse_qs(urlparse(url).query).get('dur')
+        if vals:
+            d = float(vals[0])
+            if d > 0:
+                return d
+    except Exception:
+        pass
+    return None
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuse automatic redirects so _range_probe can follow them by
+    hand and re-send the Range header (the stock handler is not
+    relied on to keep it)."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+_OPENER = urllib.request.build_opener(_NoRedirect())
+
+
+def _range_probe(url, range_spec):
+    """One ranged GET of `bytes=<range_spec>` against url.
+
+    Returns (status, content_range): the HTTP status (after following
+    redirects manually) and the Content-Range header value, either of
+    which may be None. status is None when the request itself failed
+    (DNS, timeout, reset, ...). The body is never read.
+    """
+    current = url
+    for _ in range(6):
+        req = urllib.request.Request(
+            current, headers={'Range': f'bytes={range_spec}'})
+        try:
+            with _OPENER.open(req, timeout=10) as resp:
+                return resp.status, resp.headers.get('Content-Range')
+        except urllib.error.HTTPError as e:
+            status = e.code
+            headers = e.headers
+            location = headers.get('Location') if headers else None
+            content_range = headers.get('Content-Range') if headers else None
+            e.close()
+            if status in (301, 302, 303, 307, 308) and location:
+                current = urljoin(current, location)
+                continue
+            return status, content_range
+        except Exception:
+            return None, None
+    return None, None
+
+
+def _content_range_total(content_range):
+    """Total size from a Content-Range value like 'bytes 0-0/1944448',
+    or None when it does not carry a usable total."""
+    if not content_range:
+        return None
+    try:
+        total = int(content_range.rsplit('/', 1)[1].strip())
+    except (IndexError, ValueError):
+        return None
+    return total if total > 0 else None
+
+
+def verify_stream_url(url):
+    """Whether a freshly extracted stream URL serves the whole file.
+
+    Just-published videos can yield a URL that answers only a prefix
+    of the file and returns 403 past it; caching such a URL makes the
+    video unplayable until FRESH_TTL expires, even though a later
+    extraction would be fine. Probe the first byte to learn the total
+    size, then probe the last byte for reachability. At most two
+    requests per URL.
+
+    Returns True when the tail is reachable, False when the tail is
+    definitively refused (403/404/410), and None when the check
+    cannot be performed (no total size, a transient error, ...).
+    None keeps the historical fail-open behaviour: cache the URL
+    unverified.
+    """
+    status, content_range = _range_probe(url, '0-0')
+    if status != 206:
+        return None
+    total = _content_range_total(content_range)
+    if total is None:
+        return None
+    if total <= 1:
+        return True
+    status, _ = _range_probe(url, f'{total - 1}-{total - 1}')
+    if status in (200, 206):
+        return True
+    if status in (403, 404, 410):
+        return False
+    return None
+
+
+def publish(cache, now):
+    out = {}
+    with_dur = 0
+    for vid, e in cache.items():
+        if not isinstance(e, dict):
+            continue
+        url = e.get('url')
+        ts = e.get('ts')
+        if url and isinstance(ts, (int, float)) and now - ts < PUBLISH_TTL:
+            item = {'url': url, 'ts': ts}
+            dur = e.get('dur')
+            if not isinstance(dur, (int, float)):
+                dur = parse_dur(url)
+            if isinstance(dur, (int, float)):
+                item['dur'] = dur
+                with_dur += 1
+            out[vid] = item
+    d = os.path.dirname(PUBLISH)
+    os.makedirs(d, exist_ok=True)
+    tmp = os.path.join(d, '.audio-urls.json.tmp')
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
+    os.replace(tmp, PUBLISH)
+    return len(out), with_dur
+
+
+def main():
+    if not PUBLISH:
+        print('yt-audio-batch: local host config missing or incomplete: '
+              f'{CONF_PATH} (need YT_AUDIO_PUBLISH_PATH)', file=sys.stderr)
+        return 1
+    os.makedirs(HOME_DIR, exist_ok=True)
+    lock_f = open(LOCK, 'w')
+    try:
+        fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return 0
+    start = time.time()
+    now = int(start)
+    # Rotate queue
+    queued = []
+    processing = QUEUE + '.processing'
+    if os.path.exists(QUEUE):
+        try:
+            os.replace(QUEUE, processing)
+        except FileNotFoundError:
+            processing = None
+    else:
+        processing = None
+    if processing and os.path.exists(processing):
+        try:
+            with open(processing, 'r', encoding='utf-8', errors='replace') as f:
+                for line in f:
+                    parts = line.rstrip('\n').split('\t')
+                    if len(parts) >= 2:
+                        vid = parts[1].strip()
+                    elif parts:
+                        vid = parts[0].strip()
+                    else:
+                        continue
+                    # validate 11-char id
+                    if len(vid) == 11 and all(c.isalnum() or c in '_-' for c in vid):
+                        queued.append(vid)
+        finally:
+            try:
+                os.remove(processing)
+            except FileNotFoundError:
+                pass
+    # Dedupe preserving order
+    seen = set()
+    uniq = []
+    for vid in queued:
+        if vid not in seen:
+            seen.add(vid)
+            uniq.append(vid)
+    cache = load_cache()
+    extracted = 0
+    skipped_fresh = 0
+    skipped_err = 0
+    failed = 0
+    verify_failed = 0
+    succeeded = 0
+    ytdlp = find_ytdlp()
+    # Classify the queue: fresh entries and entries inside the error
+    # backoff window are skipped for this run; everything else is an
+    # extraction candidate.
+    candidates = []
+    for vid in uniq:
+        entry = cache.get(vid) if isinstance(cache.get(vid), dict) else {}
+        entry = dict(entry) if entry else {}
+        entry['lastQueued'] = now
+        cache[vid] = entry
+        if entry.get('url') and isinstance(entry.get('ts'), (int, float)) and now - entry['ts'] < FRESH_TTL:
+            skipped_fresh += 1
+            continue
+        if isinstance(entry.get('errorTs'), (int, float)) and now - entry['errorTs'] < ERR_TTL:
+            skipped_err += 1
+            continue
+        candidates.append(vid)
+    # Oldest cached URL first; ids that were never extracted (no ts)
+    # go first, so a large queue cannot starve its tail.
+    def candidate_key(vid):
+        ts = cache[vid].get('ts')
+        return ts if isinstance(ts, (int, float)) else 0
+    candidates.sort(key=candidate_key)
+    deferred = []
+    for vid in candidates:
+        entry = cache[vid]
+        if extracted >= MAX_PER_RUN:
+            deferred.append(vid)
+            continue
+        if time.time() - start > RUN_BUDGET:
+            deferred.append(vid)
+            continue
+        extracted += 1
+        if not ytdlp:
+            entry['error'] = 'yt-dlp_not_found'
+            entry['errorTs'] = int(time.time())
+            failed += 1
+            continue
+        watch = f'https://www.youtube.com/watch?v={vid}'
+        try:
+            result = subprocess.run(
+                [ytdlp, '-g', '-f', 'bestaudio[ext=m4a]', '--no-playlist', '--', watch],
+                capture_output=True, text=True, timeout=60,
+            )
+            out_lines = [ln.strip() for ln in (result.stdout or '').splitlines() if ln.strip()]
+            if result.returncode == 0 and len(out_lines) == 1 and out_lines[0].startswith('https://'):
+                if verify_stream_url(out_lines[0]) is False:
+                    # Range-limited URL: do not store it as good (a
+                    # previous, older URL is left untouched). Record
+                    # the failure without an ERR_TTL backoff and
+                    # requeue via `deferred`, so the next run
+                    # re-extracts it; only after VERIFY_MAX_REQUEUE
+                    # consecutive failures does the normal error
+                    # backoff take over.
+                    entry['error'] = 'tail_range_unreachable'
+                    prev = entry.get('verifyFails')
+                    fails = prev + 1 if isinstance(prev, int) else 1
+                    entry['verifyFails'] = fails
+                    if fails <= VERIFY_MAX_REQUEUE:
+                        entry.pop('errorTs', None)
+                        deferred.append(vid)
+                    else:
+                        entry['errorTs'] = int(time.time())
+                    verify_failed += 1
+                    failed += 1
+                    cache[vid] = entry
+                    continue
+                entry['url'] = out_lines[0]
+                entry['ts'] = int(time.time())
+                dur = parse_dur(out_lines[0])
+                if dur is not None:
+                    entry['dur'] = dur
+                else:
+                    entry.pop('dur', None)
+                entry.pop('error', None)
+                entry.pop('errorTs', None)
+                entry.pop('verifyFails', None)
+                succeeded += 1
+            else:
+                err = (result.stderr or '').strip().splitlines()
+                entry['error'] = (err[-1] if err else f'exit_{result.returncode}')[:500]
+                entry['errorTs'] = int(time.time())
+                failed += 1
+        except Exception as e:
+            entry['error'] = str(e)[:500]
+            entry['errorTs'] = int(time.time())
+            failed += 1
+        cache[vid] = entry
+    # Requeue whatever this run could not process (per-run cap or
+    # time budget) plus the videos whose fresh URL failed the tail
+    # verification, so the next run picks them up instead of dropping
+    # them. Append mode, same line format as the yt-audio trigger;
+    # duplicates are removed by the dedupe of the next run.
+    if deferred:
+        try:
+            with open(QUEUE, 'a', encoding='utf-8') as qf:
+                for vid in deferred:
+                    qf.write(f"{now}\t{vid}\n")
+        except Exception:
+            pass
+    # Prune by lastQueued older than 7 days
+    cutoff = now - KEEP_DAYS * 86400
+    for vid in list(cache.keys()):
+        e = cache.get(vid)
+        if isinstance(e, dict):
+            lq = e.get('lastQueued')
+            if isinstance(lq, (int, float)) and lq < cutoff:
+                del cache[vid]
+    # Hard cap 1000, oldest lastQueued first
+    if len(cache) > MAX_ENTRIES:
+        sorted_ids = sorted(cache.keys(), key=lambda k: cache[k].get('lastQueued', 0) if isinstance(cache[k], dict) else 0)
+        for vid in sorted_ids[:len(cache) - MAX_ENTRIES]:
+            del cache[vid]
+    save_cache(cache)
+    published, published_dur = publish(cache, int(time.time()))
+    elapsed = int(time.time() - start)
+    summary = f"{time.strftime('%Y-%m-%dT%H:%M:%S%z', time.localtime())} queued={len(uniq)} extracted={extracted} ok={succeeded} failed={failed} verify_failed={verify_failed} skip_fresh={skipped_fresh} skip_err={skipped_err} published={published} published_dur={published_dur} elapsed={elapsed}s"
+    try:
+        with open(LOG, 'a', encoding='utf-8') as lf:
+            lf.write(summary + '\n')
+    except Exception:
+        pass
+    print(summary)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

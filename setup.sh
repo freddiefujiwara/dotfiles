@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+dotfiles_dir="${DOTFILES_DIR:-$script_dir}"
+
+mkdir -p "$HOME/.bin" "$HOME/.test" "$HOME/.newsboat" "$HOME/.config" "$HOME/.gemini"
+cp -a "$dotfiles_dir/.bin/." "$HOME/.bin/"
+# .bin holds executable scripts only. Force the executable bit on the
+# installed copies so a file whose mode was lost (e.g. committed as 100644)
+# does not install as a non-executable "Permission denied" script.
+find "$HOME/.bin" -type f -exec chmod +x {} +
+cp -a "$dotfiles_dir/.test/." "$HOME/.test/"
+cp -a "$dotfiles_dir/.newsboat/." "$HOME/.newsboat/"
+# Feed URLs that must not live in this repository (they name
+# home-server hosts) are kept in a local-only fragment. Append it to
+# the installed urls file; the fragment itself is never written here,
+# so it survives every setup run unchanged.
+if [[ -f "$HOME/.newsboat/urls.local" && -f "$HOME/.newsboat/urls" ]]; then
+  cat "$HOME/.newsboat/urls.local" >> "$HOME/.newsboat/urls"
+fi
+cp -a "$dotfiles_dir/.config/." "$HOME/.config/"
+cp -a "$dotfiles_dir/.muttrc" "$HOME/"
+cp -a "$dotfiles_dir/.codex/." "$HOME/.codex/"
+cp -a "$dotfiles_dir/.gemini/settings.json" "$HOME/.gemini/"
+
+
+rm -rf "$HOME/.vim"
+rm -f "$HOME/.vimrc"
+ln -s "$dotfiles_dir/vimrc/_vimrc" "$HOME/.vimrc"
+mkdir -p "$dotfiles_dir/.vim"
+ln -s "$dotfiles_dir/.vim" "$HOME/"
+
+curl_bin="$(command -v curl)"
+curl_args=(-fL --create-dirs)
+if [[ "$curl_bin" == /mingw64/bin/curl ]]; then
+  curl_args+=(--ssl-no-revoke)
+fi
+curl_args+=(-o)
+
+"$curl_bin" "${curl_args[@]}" "$HOME/.vim/autoload/plug.vim" \
+  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+"$curl_bin" "${curl_args[@]}" "$HOME/.local/share/nvim/site/autoload/plug.vim" \
+  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim

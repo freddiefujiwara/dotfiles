@@ -1,0 +1,11 @@
+.vim/
+.newsboat/cache.db
+.newsboat/history
+.newsboat/history.search
+.newsboat/cache.db.lock
+.codex/skills/
+.agents/
+.github/skills/
+.gemini/*
+!/.gemini/settings.json
+.agent/

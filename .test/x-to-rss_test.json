@@ -1,0 +1,31 @@
+{
+  "tweets": [
+    {
+      "id": "111",
+      "text": "Hello\nWorld & <tag>",
+      "createdAt": "Fri Jan 16 00:00:00 +0000 2026",
+      "author": {
+        "id": "1",
+        "name": "Alice & Co <Team>",
+        "username": "alice",
+        "profileImageUrl": "https://example.com/a.png"
+      },
+      "metrics": { "likes": 1, "retweets": 0, "replies": 0, "quotes": 0, "views": 10, "bookmarks": 0 },
+      "isReply": false
+    },
+    {
+      "id": "222",
+      "text": "Newer post",
+      "createdAt": "Sat Jan 17 00:00:00 +0000 2026",
+      "author": {
+        "id": "2",
+        "name": "Bob 'B'",
+        "username": "bob",
+        "profileImageUrl": "https://example.com/b.png"
+      },
+      "metrics": { "likes": 2, "retweets": 1, "replies": 0, "quotes": 0, "views": 20, "bookmarks": 0 },
+      "isReply": false
+    }
+  ],
+  "cursor": "dummy"
+}

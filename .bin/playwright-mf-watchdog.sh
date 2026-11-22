@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# playwright-mf watchdog (added 2026-11-06): alert when the daily outputs are missing or stale.
+# Notification address lives outside the repo: ~/.config/playwright-mf/notify-to
+# (falls back to the local user when the file is missing).
+NOTIFY_TO="$(cat ~/.config/playwright-mf/notify-to 2>/dev/null || echo fumikazu)"
+CSV=$HOME/gd/API/assets/breakdown.csv
+PROBLEMS=""
+TODAY=$(date +%F)
+[ "$(date -r $CSV +%F 2>/dev/null)" = "$TODAY" ] || PROBLEMS="$PROBLEMS csv-not-updated;"
+# Monthly archives (added 2026-11-10): the last 13 months (current month
+# included; window widened to 13 months on 2026-11-10) must all exist, be updated today, hold at least one item, and
+# contain dates of their own month only.
+for i in 0 1 2 3 4 5 6 7 8 9 10 11 12; do
+  ym=$(date -d "$i months ago" +%Y%m)
+  f=$HOME/gd/API/assets/mfcf.$ym.xml
+  if [ ! -f "$f" ]; then
+    PROBLEMS="$PROBLEMS mfcf-$ym-missing;"
+    continue
+  fi
+  [ "$(date -r "$f" +%F 2>/dev/null)" = "$TODAY" ] || PROBLEMS="$PROBLEMS mfcf-$ym-not-updated;"
+  n=$(grep -c "<item>" "$f" 2>/dev/null)
+  n=${n:-0}
+  [ "$n" -ge 1 ] || PROBLEMS="$PROBLEMS mfcf-$ym-has-0-items;"
+  mon=$(LC_TIME=C date -d "$i months ago" +%b)
+  yr=${ym:0:4}
+  total=$(grep -o "<pubDate>[^<]*</pubDate>" "$f" 2>/dev/null | wc -l)
+  own=$(grep -o "<pubDate>[^<]* $mon $yr [^<]*</pubDate>" "$f" 2>/dev/null | wc -l)
+  if [ "$total" -gt 0 ] && [ "$total" != "$own" ]; then
+    PROBLEMS="$PROBLEMS mfcf-$ym-date-mismatch($own/$total);"
+  fi
+done
+if [ -n "$PROBLEMS" ]; then
+  {
+    echo "To: $NOTIFY_TO"
+    echo "Subject: [ze] playwright-mf watchdog alert"
+    echo "Content-Type: text/plain; charset=UTF-8"
+    echo ""
+    echo "Problems:$PROBLEMS"
+    date
+  } | /usr/sbin/sendmail -t
+  echo "$(date) alert:$PROBLEMS" >> ~/.playwright-mf-watchdog.log
+fi

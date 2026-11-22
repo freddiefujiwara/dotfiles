@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SCRIPT_DIR/switchbot-common"
+
+usage() {
+  echo "Usage: $0 -d <deviceid>" >&2
+}
+
+deviceid=""
+while getopts d: option; do
+  case "${option}" in
+    d) deviceid=${OPTARG} ;;
+    *) usage; exit 1 ;;
+  esac
+done
+
+if [[ -z $deviceid ]]; then
+  usage
+  exit 1
+fi
+switchbot_get "/devices/${deviceid}/status" | jq
