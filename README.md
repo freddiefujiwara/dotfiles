@@ -50,7 +50,6 @@ Each file in `.bin/` is a command.
 
 ## `.config/` settings
 
-- `tgpt/config.toml`: tgpt provider setting.
 - `nvim/init.vim`: Neovim settings.
 
 ## Before you run `setup.sh`
