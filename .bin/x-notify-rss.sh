@@ -22,7 +22,7 @@ ITEMS="$(jq -r 'def txt: if type == "string" then . elif . == null then "" else 
   def cdata: txt | clean | gsub("]]>"; "]]]]><![CDATA[>");
   def esc: txt | clean | gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;") | gsub("\""; "&quot;");
   def rfc822: txt | . as $s | try (strptime("%a %b %d %H:%M:%S %z %Y") | strftime("%a, %d %b %Y %H:%M:%S +0000")) catch $s;
-  (if type == "array" then . elif (type == "object" and (.notifications | type == "array")) then .notifications else error("notify input must be a JSON array") end)
+  (if type == "array" then . elif (type == "object" and (.notifications | type == "array")) then .notifications else error("notify input must be an array or an object with a notifications array") end)
   | .[]
   | select(type == "object")
   | select(.tweet | type == "object")
