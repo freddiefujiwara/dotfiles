@@ -46,13 +46,24 @@ write_json() {
   [ ! -s "$OUT" ]
 }
 
-@test "top-level object instead of an array fails with no output at all" {
+@test "top-level object without a notifications array fails with no output at all" {
   write_json obj.json <<'JSON'
-{"notifications": []}
+{"unexpected": []}
 JSON
   run_script "$BATS_TEST_TMPDIR/obj.json"
   [ "$STATUS" -ne 0 ]
   [ ! -s "$OUT" ]
+}
+
+@test "top-level notifications object (the current CLI output shape) yields a valid empty feed" {
+  write_json obj.json <<'JSON'
+{"notifications": [], "cursor": "CURSOR1"}
+JSON
+  run_script "$BATS_TEST_TMPDIR/obj.json"
+  [ "$STATUS" -eq 0 ]
+  count="$(grep -c '<item>' "$OUT" || true)"
+  [ "$count" -eq 0 ]
+  assert_wellformed "$OUT"
 }
 
 @test "non-object entries and non-object tweets are skipped" {
