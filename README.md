@@ -12,6 +12,7 @@ It is very small and simple.
 - `.bin/`: small helper commands.
 - `.newsboat/`: Newsboat RSS settings.
 - `.config/`: app configuration files.
+- `.codex/` / `.gemini/`: AI CLI settings installed by `setup.sh`.
 
 ## Commands in `.bin/`
 
@@ -37,10 +38,14 @@ Each file in `.bin/` is a command.
 - `switchbot-devices`: list SwitchBot devices.
 - `switchbot-status`: get SwitchBot device status.
 - `switchbot-tv`: set a TV channel with SwitchBot.
+- `update-region-weights`: derive region allocation weights from MSCI fact sheets and update the region-weights CSV on Drive (monthly job, used by the asset dashboard).
 - `x-switch.sh`: switch X (Twitter) CLI auth file.
 - `x-notify-rss.sh`: convert Twitter notification JSON to RSS.
+- `x-stats-rss.sh`: convert X (Twitter) stats JSON to RSS.
 - `x-to-rss.sh`: convert tweets JSON to RSS.
 - `youtube-play`: cast a YouTube video to Google Home with `catt`.
+- `yt-audio`: queue a YouTube video ID for async audio URL extraction (called through `altd`).
+- `yt-audio-batch`: drain the `yt-audio` queue, extract audio stream URLs with `yt-dlp -g`, and publish them as JSON (cron).
 
 ## `.newsboat/` settings
 
@@ -51,6 +56,10 @@ Each file in `.bin/` is a command.
 ## `.config/` settings
 
 - `nvim/init.vim`: Neovim settings.
+- `alacritty/alacritty.toml`: Alacritty terminal settings.
+- `i3/config`: i3 window manager settings.
+- `i3status/config`: i3status bar settings.
+- `mise/config.toml`: mise tool version settings.
 
 ## Before you run `setup.sh`
 
