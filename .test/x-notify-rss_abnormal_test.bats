@@ -4,7 +4,7 @@
 # Abnormal-case and invariant tests for .bin/x-notify-rss.sh:
 # one deformed notification must not kill or corrupt the whole feed,
 # structurally invalid input must fail with no partial output, and
-# item guids (kind + actor + tweet id) must be stable across runs.
+# item guids (kind + tweet id) must be stable across runs.
 #
 # Requirements: jq, python3 (XML well-formedness checks)
 
@@ -84,7 +84,7 @@ JSON
   [ "$STATUS" -eq 0 ]
   count="$(grep -c '<item>' "$OUT")"
   [ "$count" -eq 1 ]
-  grep -q 'x-notify-like-alice-111' "$OUT"
+  grep -q 'x-notify-like-111' "$OUT"
   assert_wellformed "$OUT"
 }
 
@@ -113,7 +113,7 @@ JSON
   run_script "$BATS_TEST_TMPDIR/numid.json"
   [ "$STATUS" -eq 0 ]
   grep -q 'https://twitter.com/bob/status/12345' "$OUT"
-  grep -q 'x-notify-like-alice-12345' "$OUT"
+  grep -q 'x-notify-like-12345' "$OUT"
   assert_wellformed "$OUT"
 }
 
@@ -127,7 +127,7 @@ JSON
 JSON
   run_script "$BATS_TEST_TMPDIR/badactors.json"
   [ "$STATUS" -eq 0 ]
-  grep -q 'x-notify-like-unknown-111' "$OUT"
+  grep -q 'x-notify-like-111' "$OUT"
   assert_wellformed "$OUT"
 }
 
@@ -153,6 +153,31 @@ JSON
   [ "$STATUS" -eq 0 ]
   grep -o '<guid isPermaLink="false">[^<]*</guid>' "$OUT" >"$BATS_TEST_TMPDIR/guids2.txt"
   cmp "$BATS_TEST_TMPDIR/guids1.txt" "$BATS_TEST_TMPDIR/guids2.txt"
+}
+
+@test "guid does not depend on the actors or their order (aggregated notifications stay one article)" {
+  write_json agg1.json <<'JSON'
+[{"kind": "like",
+  "actors": [{"name": "Alice", "username": "alice"}, {"name": "Bob", "username": "bob"}],
+  "tweet": {"id": "111", "text": "hi",
+            "createdAt": "Wed Oct 10 20:19:24 +0000 2018",
+            "author": {"username": "bob"}}}]
+JSON
+  write_json agg2.json <<'JSON'
+[{"kind": "like",
+  "actors": [{"name": "Bob", "username": "bob"}, {"name": "Alice", "username": "alice"}],
+  "tweet": {"id": "111", "text": "hi",
+            "createdAt": "Wed Oct 10 20:19:24 +0000 2018",
+            "author": {"username": "bob"}}}]
+JSON
+  run_script "$BATS_TEST_TMPDIR/agg1.json"
+  [ "$STATUS" -eq 0 ]
+  grep -o '<guid isPermaLink="false">[^<]*</guid>' "$OUT" >"$BATS_TEST_TMPDIR/agg-guids1.txt"
+  run_script "$BATS_TEST_TMPDIR/agg2.json"
+  [ "$STATUS" -eq 0 ]
+  grep -o '<guid isPermaLink="false">[^<]*</guid>' "$OUT" >"$BATS_TEST_TMPDIR/agg-guids2.txt"
+  cmp "$BATS_TEST_TMPDIR/agg-guids1.txt" "$BATS_TEST_TMPDIR/agg-guids2.txt"
+  grep -q 'x-notify-like-111' "$BATS_TEST_TMPDIR/agg-guids1.txt"
 }
 
 @test "duplicate notifications are both emitted (guid collision is by design)" {

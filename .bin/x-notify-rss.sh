@@ -11,7 +11,8 @@ PUB_DATE=$(date -R)
 # 1. .[] で配列を展開
 # 2. tweet がオブジェクトでない通知は読み飛ばす
 # 3. 必要な情報を抽出して整形
-# guid は X の entryId（再発行で変わる）を使わず、種別・行為者・ツイートIDから組み立てる
+# guid は X の entryId（再発行で変わる）と行為者（まとめ通知では先頭の行為者が
+# 入れ替わり、同じ通知でも guid が変わってしまう）を使わず、種別とツイートIDから組み立てる
 # pubDate はツイートの createdAt（Twitter形式）を RFC 822 形式へ変換する（x-to-rss.sh と同等、UTC表記）
 # 変換を先に済ませてからヘッダーを出すことで、入力が壊れていても
 # 中途半端なフィードを書き出さない。
@@ -32,7 +33,7 @@ ITEMS="$(jq -r 'def txt: if type == "string" then . elif . == null then "" else 
   "  <link>https://twitter.com/" + ((.tweet.author | obj).username | txt) + "/status/" + (.tweet.id | txt) + "</link>\n" +
   "  <description><![CDATA[" + (.tweet.text | cdata) + "]]></description>\n" +
   "  <pubDate>" + (.tweet.createdAt | rfc822) + "</pubDate>\n" +
-  "  <guid isPermaLink=\"false\">" + "x-notify-" + ((.kind // "unknown") | txt) + "-" + (($a0.username // "unknown") | txt) + "-" + (.tweet.id | txt) + "</guid>\n" +
+  "  <guid isPermaLink=\"false\">" + "x-notify-" + ((.kind // "unknown") | txt) + "-" + (.tweet.id | txt) + "</guid>\n" +
   "  <xn:kind>" + ((.kind // "unknown") | esc) + "</xn:kind>\n" +
   ((.actors | arr) | map("  <xn:actor username=\"" + ((obj | .username // "unknown") | esc) + "\">" + ((obj | .name // "Unknown") | esc) + "</xn:actor>\n") | join("")) +
   "  <xn:tweet-id>" + (.tweet.id | txt) + "</xn:tweet-id>\n" +
