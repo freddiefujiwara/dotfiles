@@ -55,18 +55,18 @@ setup() {
   [[ "$output" == *"<title><![CDATA[Alice (@alice) - like]]></title>"* ]]
   [[ "$output" == *"<link>https://twitter.com/testuser/status/12345</link>"* ]]
   [[ "$output" == *"<description><![CDATA[Hello world!]]></description>"* ]]
-  [[ "$output" == *"<guid isPermaLink=\"false\">x-notify-like-alice-12345</guid>"* ]]
+  [[ "$output" == *"<guid isPermaLink=\"false\">x-notify-like-12345</guid>"* ]]
 
   # Test Case 2: Notification with newlines in text
   [[ "$output" == *"<description><![CDATA[Another tweet for testing purposes.\\nIt has newlines.]]></description>"* ]]
-  [[ "$output" == *"<guid isPermaLink=\"false\">x-notify-retweet-charlie-67890</guid>"* ]]
+  [[ "$output" == *"<guid isPermaLink=\"false\">x-notify-retweet-67890</guid>"* ]]
 
   # Test Case 3: Fallback for missing actor info
   [[ "$output" == *"<title><![CDATA[Unknown (@unknown) - like]]></title>"* ]]
-  [[ "$output" == *"<guid isPermaLink=\"false\">x-notify-like-unknown-11223</guid>"* ]]
+  [[ "$output" == *"<guid isPermaLink=\"false\">x-notify-like-11223</guid>"* ]]
 }
 
-@test "guid is built from kind, actor and tweet id, not the notification entry id" {
+@test "guid is built from kind and tweet id, not the notification entry id or the actor" {
   run bash "$SCRIPT" "$FIXTURE"
   [ "$status" -eq 0 ]
   [[ "$output" != *">notif_1</guid>"* ]]
