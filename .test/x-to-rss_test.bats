@@ -75,6 +75,29 @@ setup() {
   [[ "$output" == *"<description>Hello</description>"* ]]
 }
 
+@test "channel metadata with XML characters parses back to the configured values" {
+  command -v python3 >/dev/null 2>&1 || skip "python3 is required to parse XML"
+  local title='QA & 開発'
+  local link='https://example.com/feed?lang=ja&limit=5'
+  local description='RSS <updates> & "notes"'
+
+  run env FEED_TITLE="$title" FEED_LINK="$link" FEED_DESC="$description" bash "$SCRIPT" "$FIXTURE"
+  [ "$status" -eq 0 ]
+
+  run python3 -c '
+import sys
+import xml.etree.ElementTree as ET
+
+channel = ET.parse(sys.stdin).getroot().find("channel")
+title, link, description = sys.argv[1:]
+assert channel.findtext("title") == title
+assert channel.findtext("link") == link
+assert channel.findtext("description") == description
+assert channel.find("{http://www.w3.org/2005/Atom}link").get("href") == link
+' "$title" "$link" "$description" <<<"$output"
+  [ "$status" -eq 0 ]
+}
+
 @test "emits one <item> per tweet" {
   run bash "$SCRIPT" "$FIXTURE"
   [ "$status" -eq 0 ]
