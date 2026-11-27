@@ -71,6 +71,11 @@ ROWS="$(jq -r '
 ' "$JSON_FILE" \
 | jq -c '.[]')"
 
+# Channel metadata is used as both XML text and an attribute.
+esc_feed_title="$(xml_escape_text "$FEED_TITLE")"
+esc_feed_link="$(xml_escape_text "$FEED_LINK")"
+esc_feed_desc="$(xml_escape_text "$FEED_DESC")"
+
 {
   # RSS header
   cat <<EOF
@@ -79,11 +84,11 @@ ROWS="$(jq -r '
   xmlns:atom="http://www.w3.org/2005/Atom"
   xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>${FEED_TITLE}</title>
-    <link>${FEED_LINK}</link>
-    <description>${FEED_DESC}</description>
+    <title>${esc_feed_title}</title>
+    <link>${esc_feed_link}</link>
+    <description>${esc_feed_desc}</description>
     <language>ja</language>
-    <atom:link href="${FEED_LINK}" rel="self" type="application/rss+xml" />
+    <atom:link href="${esc_feed_link}" rel="self" type="application/rss+xml" />
 EOF
 
   # Items
